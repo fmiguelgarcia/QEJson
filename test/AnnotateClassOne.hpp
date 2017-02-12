@@ -17,7 +17,7 @@ class AnnotateClassOne : public QObject
 	public:
 		Q_INVOKABLE double add( double a, double b) const;
 		
-	private:
+	public:
 		int m_id;
 		QString m_description;
 		double m_realValue;

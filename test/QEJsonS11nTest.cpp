@@ -39,7 +39,16 @@ void QEJsonS11nTest::simpleTypes()
 	serilizer.save( &obj);
 	const QString dataStr = QString::fromUtf8(data); 
 	QVERIFY( expected == dataStr);
+
+	AnnotateClassOne obj2;
+	QByteArray data2 = expected.toUtf8();
+	QBuffer buffer2( &data2);
+	QVERIFY( buffer2.open( QIODevice::ReadOnly));
+	QEJsonS11n serilizer2( &buffer);
 	
+	serilizer2.load( &obj2);
+	QVERIFY( obj.m_id == obj2.m_id &&
+		obj.m_description == obj2.m_description );
 }
 
 QTEST_MAIN(QEJsonS11nTest)
