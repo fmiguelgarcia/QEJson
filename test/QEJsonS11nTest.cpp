@@ -36,7 +36,7 @@ void QEJsonS11nTest::simpleTypes()
 	objSource.setProperty( "description", description);
 	objSource.setProperty( "realValue", realValue);
 
-	QEJsonS11n s11nSave( &bufferTarget, QJsonDocument::JsonFormat::Compact);
+	QEJsonS11n s11nSave( &bufferTarget, nullptr, QJsonDocument::JsonFormat::Compact);
 	s11nSave.save( &objSource);
 	const QString dataTargetStr = QString::fromUtf8( dataTarget);
 	QVERIFY( expected == dataTargetStr);

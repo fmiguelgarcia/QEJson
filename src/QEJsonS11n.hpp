@@ -7,8 +7,8 @@ class QIODevice;
 class QEJsonS11n :  public QES11nBase
 {
 	public:
-		QEJsonS11n( QObject *parent = nullptr,
-					QIODevice* dev,
+		QEJsonS11n( QIODevice* dev,
+					QObject *parent = nullptr,
 					const QJsonDocument::JsonFormat format = QJsonDocument::JsonFormat::Indented );
 		
 		void save( const QObject* const source) const override;

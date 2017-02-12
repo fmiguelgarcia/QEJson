@@ -27,7 +27,7 @@ void write( QJsonObject& json, const QEAnnotationModel annModel,
 void read( const QJsonObject &json, const QEAnnotationModel annModel, 
 		   QObject *const obj, const QMetaProperty metaProperty);
 
-QEJsonS11n::QEJsonS11n( QObject* parent, QIODevice* dev, const QJsonDocument::JsonFormat format)
+QEJsonS11n::QEJsonS11n( QIODevice* dev, QObject* parent, const QJsonDocument::JsonFormat format)
 	: QES11nBase(parent), m_dev(dev), m_format(format)
 {}
 
