@@ -1,5 +1,5 @@
 [requires]
-QAnnotation/0.1.0@fmiguelgarcia/stable
+QEAnnotation/0.1.0@fmiguelgarcia/stable
 
 [generators]
 cmake

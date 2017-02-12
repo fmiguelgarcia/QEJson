@@ -1,5 +1,5 @@
 #include "QEJsonS11n.hpp"
-#include <QAnnotation.hpp>
+#include <QEAnnotation.hpp>
 #include <QMetaProperty>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -15,7 +15,7 @@ namespace
 }
 
 QJsonValue toJsonValue( const QVariant& value, const int type);
-void write( QJsonObject& json, const QAnnotationModel annModel, 
+void write( QJsonObject& json, const QEAnnotationModel annModel, 
 			const QObject* const obj, const QMetaProperty metaProperty);
 
 QEJsonS11n::QEJsonS11n( QIODevice* target, const QJsonDocument::JsonFormat format)
@@ -25,7 +25,7 @@ QEJsonS11n::QEJsonS11n( QIODevice* target, const QJsonDocument::JsonFormat forma
 void QEJsonS11n::save( const QObject* const o) const
 {
 	const QMetaObject * mo = o->metaObject();
-	const QAnnotationModel annModel = QAnnotation::registerModel( mo);
+	const QEAnnotationModel annModel = QEAnnotation::registerModel( mo);
 	QJsonObject json;
 
 	for( int i = mo->propertyOffset() ; i < mo->propertyCount(); ++i)
@@ -43,8 +43,7 @@ const QEJsonS11n &QEJsonS11n::operator<<(const QObject *const source) const
 }
 
 
-void write( QJsonObject& json, const QAnnotationModel annModel, 
-			const QObject* const obj, const QMetaProperty metaProperty)
+void write( QJsonObject &json, const QEAnnotationModel annModel, const QObject *const obj, const QMetaProperty metaProperty)
 {
 	const QString propName = metaProperty.name();
 	const bool isJsonPropertyEnable = annModel.annotation(
