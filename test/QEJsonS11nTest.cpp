@@ -20,35 +20,36 @@ void QEJsonS11nTest::simpleTypes_data()
 
 void QEJsonS11nTest::simpleTypes()
 {
-	AnnotateClassOne obj;
-	QByteArray data;
-	QBuffer buffer( &data);
-	QVERIFY( buffer.open( QIODevice::ReadWrite));
-	
-	QEJsonS11n serilizer( &buffer, QJsonDocument::JsonFormat::Compact);
+	AnnotateClassOne objSource, objTarget;
+	QByteArray dataSource, dataTarget;
 
 	QFETCH( int, id);
 	QFETCH( QString, description);
 	QFETCH( double, realValue);
 	QFETCH( QString, expected);
-	
-	obj.setProperty( "id", id);
-	obj.setProperty( "description", description);
-	obj.setProperty( "realValue", realValue);
 
-	serilizer.save( &obj);
-	const QString dataStr = QString::fromUtf8(data); 
-	QVERIFY( expected == dataStr);
+	// Test Save
+	QBuffer bufferTarget( &dataTarget);
+	QVERIFY( bufferTarget.open( QIODevice::ReadWrite));
 
-	AnnotateClassOne obj2;
-	QByteArray data2 = expected.toUtf8();
-	QBuffer buffer2( &data2);
-	QVERIFY( buffer2.open( QIODevice::ReadOnly));
-	QEJsonS11n serilizer2( &buffer);
+	objSource.setProperty( "id", id);
+	objSource.setProperty( "description", description);
+	objSource.setProperty( "realValue", realValue);
+
+	QEJsonS11n s11nSave( &bufferTarget, QJsonDocument::JsonFormat::Compact);
+	s11nSave.save( &objSource);
+	const QString dataTargetStr = QString::fromUtf8( dataTarget);
+	QVERIFY( expected == dataTargetStr);
+
+	// Test load
+	dataSource = expected.toUtf8();
+	QBuffer bufferSource( &dataSource);
+	QVERIFY( bufferSource.open( QIODevice::ReadOnly));
+	QEJsonS11n serilizer2( &bufferSource);
 	
-	serilizer2.load( &obj2);
-	QVERIFY( obj.m_id == obj2.m_id &&
-		obj.m_description == obj2.m_description );
+	serilizer2.load( &objTarget);
+	QVERIFY( objSource.m_id == objTarget.m_id &&
+		objSource.m_description == objTarget.m_description );
 }
 
 QTEST_MAIN(QEJsonS11nTest)

@@ -7,12 +7,17 @@
 #include <stdexcept>
 using namespace std;
 namespace 
-{
+{	inline QString JSON_ANN_CLASS_KEY() noexcept
+	{ return QLatin1Literal( "class" );}
+
 	inline QString JSON_ANN_PROPERTY_ENABLE() noexcept 
-	{ return QLatin1Literal("@json.property.enable");}
+	{ return QLatin1Literal( "@json.property.enable");}
 
 	inline QString JSON_ANN_PROPERTY_NAME() noexcept 
-	{ return QLatin1Literal("@json.property.name");}
+	{ return QLatin1Literal( "@json.property.name");}
+
+	inline QString JSON_ANN_CLASS_PARENT() noexcept
+	{ return QLatin1Literal( "@json.class.parent" );}
 }
 
 QJsonValue toJsonValue( const QVariant& value, const int type);
@@ -32,7 +37,11 @@ void QEJsonS11n::save( const QObject* const o) const
 	const QEAnnotationModel annModel = QEAnnotation::registerModel( mo);
 	QJsonObject json;
 
-	for( int i = mo->propertyOffset() ; i < mo->propertyCount(); ++i)
+	const bool useParentProperties = annModel.annotation( JSON_ANN_CLASS_KEY(), JSON_ANN_CLASS_PARENT())
+		.value( false).toBool();
+
+	const int propertyBegin = (useParentProperties) ? (0) : (mo->propertyOffset());
+	for( int i = propertyBegin ; i < mo->propertyCount(); ++i)
 		write( json, annModel, o, mo->property(i));
 
 	QJsonDocument doc(json);
@@ -61,7 +70,12 @@ void QEJsonS11n::load(QObject *const target) const
 	// Read all properties
 	const QMetaObject * mo = target->metaObject();
 	const QEAnnotationModel annModel = QEAnnotation::registerModel( mo);
-	for( int i = mo->propertyOffset(); i < mo->propertyCount(); ++i) 
+
+	const bool useParentProperties = annModel.annotation( JSON_ANN_CLASS_KEY(), JSON_ANN_CLASS_PARENT())
+		.value( false).toBool();
+	
+	const int propertyBegin = (useParentProperties) ? (0) : (mo->propertyOffset());
+	for( int i = propertyBegin; i < mo->propertyCount(); ++i)
 		read( doc.object(), annModel, target, mo->property(i)); 
 }
 
