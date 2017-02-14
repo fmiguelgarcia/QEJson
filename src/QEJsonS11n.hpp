@@ -13,6 +13,7 @@ class QEJsonS11n :  public QES11nBase
 		
 		void save( const QObject* const source) const override;
 		void load( QObject* const target) const override;
+		QString mimeType() const override;
 		
 		const QEJsonS11n & operator<<( const QObject *const source) const;
 		const QEJsonS11n & operator>>( QObject *const source) const;

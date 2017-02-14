@@ -79,6 +79,11 @@ void QEJsonS11n::load(QObject *const target) const
 		read( doc.object(), annModel, target, mo->property(i)); 
 }
 
+QString QEJsonS11n::mimeType() const 
+{
+	return QLatin1Literal("application/json; charset=UTF-8");
+}
+
 void read( const QJsonObject &json, const QEAnnotationModel annModel, QObject *const obj, const QMetaProperty metaProperty)
 {
 	const QString propName = metaProperty.name();
