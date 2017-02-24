@@ -16,7 +16,6 @@ class QEJsonS11nConan(ConanFile):
 
     def build(self):
         cmake = CMake( self.settings)
-        self.run( "conan install %s/QEJsonS11n" % self.conanfile_directory)
         self.run( "cmake %s/QEJsonS11n %s" % (self.conanfile_directory, cmake.command_line))
         self.run( "cmake --build . %s"  % cmake.build_config ) 
 
