@@ -6,8 +6,7 @@ find_package( Qt5Test)
 set( CMAKE_AUTOMOC ON)
 set( CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set( QEJsonS11nTest_SRCS
-	AnnotateClassOne.cpp
+set( QEJsonS11nTest_SRCS AnnotateClassOne.cpp AnnClassTwo.cpp 
 	QEJsonS11nTest.cpp)
 include_directories( ${PROJECT_SOURCE_DIR}/src )
 

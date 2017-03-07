@@ -13,13 +13,21 @@ void QEJsonS11nTest::simpleTypes_data()
 	QTest::addColumn<QString>( "expected");
 	
 	QTest::newRow("C1") << 5 << "Short description" << 3.14 
-		<< "{\"desc\":\"Short description\",\"oid\":5}";
+		<< "{\"classTwoList\":[{\"id\":10,\"strs\":[\"List X\",\"Other ñam\"]},{\"id\":20,\"strs\":[\"List X2\",\"Other ñam 2\"]}],\"desc\":\"Short description\",\"oid\":5}";
 	QTest::newRow("C1") << -1 << "Description 'with' some \"rare\" symbols: @ { € # *" << 3.14 
-		<< "{\"desc\":\"Description 'with' some \\\"rare\\\" symbols: @ { € # *\",\"oid\":-1}";
+		<< "{\"classTwoList\":[{\"id\":10,\"strs\":[\"List X\",\"Other ñam\"]},{\"id\":20,\"strs\":[\"List X2\",\"Other ñam 2\"]}],\"desc\":\"Description 'with' some \\\"rare\\\" symbols: @ { € # *\",\"oid\":-1}";
 }
 
 void QEJsonS11nTest::simpleTypes()
 {
+	AnnClassTwo ref1;
+  	ref1.m_id = 10;
+	ref1.m_strings << "List X" << QLatin1Literal("Other ñam");
+
+	AnnClassTwo ref2;
+  	ref2.m_id =	20;
+	ref2.m_strings << "List X2" << QLatin1Literal("Other ñam 2");
+
 	AnnotateClassOne objSource, objTarget;
 	QByteArray dataSource, dataTarget;
 
@@ -35,6 +43,9 @@ void QEJsonS11nTest::simpleTypes()
 	objSource.setProperty( "id", id);
 	objSource.setProperty( "description", description);
 	objSource.setProperty( "realValue", realValue);
+	objSource.m_classTwoList.push_back( ref1 );
+	objSource.m_classTwoList.push_back( ref2 );
+
 
 	QEJsonS11n s11nSave( &bufferTarget, nullptr, QJsonDocument::JsonFormat::Compact);
 	s11nSave.save( &objSource);

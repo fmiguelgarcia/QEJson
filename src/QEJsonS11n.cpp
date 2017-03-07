@@ -3,51 +3,25 @@
 #include <QMetaProperty>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QIODevice>
 #include <stdexcept>
 using namespace std;
+
 namespace 
 {	inline QString JSON_ANN_CLASS_KEY() noexcept
 	{ return QLatin1Literal( "class" );}
-
 	inline QString JSON_ANN_PROPERTY_ENABLE() noexcept 
 	{ return QLatin1Literal( "@json.property.enable");}
-
 	inline QString JSON_ANN_PROPERTY_NAME() noexcept 
 	{ return QLatin1Literal( "@json.property.name");}
-
 	inline QString JSON_ANN_CLASS_PARENT() noexcept
 	{ return QLatin1Literal( "@json.class.parent" );}
 }
 
-QJsonValue toJsonValue( const QVariant& value, const int type);
-QVariant fromJsonValue( const QJsonValue& value );
-void write( QJsonObject& json, const QEAnnotationModel annModel, 
-			const QObject* const obj, const QMetaProperty metaProperty);
-void read( const QJsonObject &json, const QEAnnotationModel annModel, 
-		   QObject *const obj, const QMetaProperty metaProperty);
-
 QEJsonS11n::QEJsonS11n( QIODevice* dev, QObject* parent, const QJsonDocument::JsonFormat format)
 	: QES11nBase(parent), m_dev(dev), m_format(format)
 {}
-
-void QEJsonS11n::save( const QObject* const o) const
-{
-	const QMetaObject * mo = o->metaObject();
-	const QEAnnotationModel annModel = QEAnnotation::registerModel( mo);
-	QJsonObject json;
-
-	const bool useParentProperties = annModel.annotation( JSON_ANN_CLASS_KEY(), JSON_ANN_CLASS_PARENT())
-		.value( false).toBool();
-
-	const int propertyBegin = (useParentProperties) ? (0) : (mo->propertyOffset());
-	for( int i = propertyBegin ; i < mo->propertyCount(); ++i)
-		write( json, annModel, o, mo->property(i));
-
-	QJsonDocument doc(json);
-	const QByteArray jsonData = doc.toJson( m_format);
-	m_dev->write( jsonData);
-}
 
 const QEJsonS11n &QEJsonS11n::operator<<(const QObject *const source) const
 {
@@ -75,8 +49,8 @@ void QEJsonS11n::load(QObject *const target) const
 		.value( false).toBool();
 	
 	const int propertyBegin = (useParentProperties) ? (0) : (mo->propertyOffset());
-	for( int i = propertyBegin; i < mo->propertyCount(); ++i)
-		read( doc.object(), annModel, target, mo->property(i)); 
+	/*for( int i = propertyBegin; i < mo->propertyCount(); ++i)
+		read( doc.object(), annModel, target, mo->property(i)); */
 }
 
 QString QEJsonS11n::mimeType() const 
@@ -84,6 +58,7 @@ QString QEJsonS11n::mimeType() const
 	return QLatin1Literal("application/json; charset=UTF-8");
 }
 
+#if 0
 void read( const QJsonObject &json, const QEAnnotationModel annModel, QObject *const obj, const QMetaProperty metaProperty)
 {
 	const QString propName = metaProperty.name();
@@ -100,32 +75,113 @@ void read( const QJsonObject &json, const QEAnnotationModel annModel, QObject *c
 		obj->setProperty( metaProperty.name(), propertyValue);
 	}
 }
+#endif 
 
-void write( QJsonObject &json, const QEAnnotationModel annModel, const QObject *const obj, const QMetaProperty metaProperty)
+void QEJsonS11n::save( const QObject* const o) const
 {
-	const QString propName = metaProperty.name();
-	const bool isJsonPropertyEnable = annModel.annotation(
-		propName,
-		JSON_ANN_PROPERTY_ENABLE()).value( true).toBool();
+	QJsonObject json;
+	save( o, json);	
+
+	// Write document
+	QJsonDocument doc(json);
+	const QByteArray jsonData = doc.toJson( m_format);
+	m_dev->write( jsonData);
+}
+
+
+void QEJsonS11n::save( const QObject* const o, QJsonObject& json) const
+{
+	const QMetaObject * mo = o->metaObject();
+	const QEAnnotationModel annModel = QEAnnotation::registerModel( mo);
+	const bool useParentProperties = annModel.annotation( JSON_ANN_CLASS_KEY(), JSON_ANN_CLASS_PARENT())
+		.value( false).toBool();
+	const int propertyBegin = (useParentProperties) ? (0) : (mo->propertyOffset());
+
+	for( int i = propertyBegin ; i < mo->propertyCount(); ++i)
+		writeProperty( annModel, mo->property(i).name(), o, json);
+}
+
+void QEJsonS11n::writeProperty( const QEAnnotationModel& model, 
+		const QString& propertyName, const QObject* const obj, 
+		QJsonObject& jsonObj) const
+{
+	const bool isJsonPropertyEnable = model.annotation( propertyName,
+				JSON_ANN_PROPERTY_ENABLE()).value( true).toBool();
 
 	if( isJsonPropertyEnable)
 	{
-		const QString jsonName = annModel.annotation(
-			propName,
-			JSON_ANN_PROPERTY_NAME()).value( propName).toString();
-		const QVariant propertyValue = metaProperty.read( obj);
-		
-		json.insert( jsonName, toJsonValue( propertyValue, metaProperty.type())); 
+		const QString jsonName = model.annotation( propertyName,
+					JSON_ANN_PROPERTY_NAME()).value( propertyName).toString();
+		const QVariant propertyValue = obj->property( propertyName.toLocal8Bit().constData());
+		jsonObj.insert( jsonName, toJsonValue( propertyValue)); 
 	}
 }
 
-QJsonValue toJsonValue( const QVariant& value, const int type)
+QJsonValue QEJsonS11n::nativeToJsonValue( const QVariant& value) const
 {
-	/// @todo Make this recursive for complex types.
-	return QJsonValue::fromVariant( value);
+	QJsonValue jsonValue;
+	const int type = value.type();	
+	switch( type )
+	{
+		case QMetaType::QStringList:
+			jsonValue = QJsonArray::fromStringList( value.toStringList());
+			break;
+		case QMetaType::QVariantList:
+		{
+			QJsonArray array;
+			for( QVariant& item : value.toList())
+				array.push_back( toJsonValue( item));
+			jsonValue = array;
+			break;
+		}
+		default:
+			jsonValue = QJsonValue::fromVariant( value);
+	}
+	return jsonValue;
 }
 
-QVariant fromJsonValue( const QJsonValue& value )
+QJsonValue QEJsonS11n::userTypeToJsonValue( const QObject* obj) const
+{
+	const QMetaObject * mo = obj->metaObject();
+	QJsonValue jsonValue;
+
+	if( mo)
+	{
+		const QEAnnotationModel annModel = QEAnnotation::registerModel( mo);
+		const bool useParentProperties = annModel.annotation( 
+				JSON_ANN_CLASS_KEY(), JSON_ANN_CLASS_PARENT()).value( false).toBool();
+
+		const int propertyBegin = (useParentProperties) ? (0) : (mo->propertyOffset());
+
+		QJsonObject jsonObj;
+		for( int i = propertyBegin ; i < mo->propertyCount(); ++i)
+			writeProperty( annModel, mo->property(i).name(), obj, jsonObj);
+		jsonValue = jsonObj;
+	}
+	
+	return jsonValue;
+}
+
+QJsonValue QEJsonS11n::toJsonValue( const QVariant& value) const
+{
+	QJsonValue jsonValue;
+	const int type = value.type();
+	
+	if( type < QVariant::UserType)
+		jsonValue = nativeToJsonValue( value);
+	else
+	{
+		if( value.canConvert<QObject*>())
+		{
+			QObject* rawObj = value.value<QObject*>();
+			jsonValue = userTypeToJsonValue( rawObj);
+		}
+	}
+
+	return jsonValue;
+}
+
+QVariant QEJsonS11n::fromJsonValue( const QJsonValue& value ) const
 {
 	return value.toVariant();
 }
