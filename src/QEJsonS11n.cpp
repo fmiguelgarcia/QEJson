@@ -160,6 +160,9 @@ QJsonValue QEJsonS11n::nativeToJsonValue( const QVariant& value) const
 			jsonValue = array;
 			break;
 		}
+		case QMetaType::QByteArray:
+			jsonValue = QString( value.toByteArray().toHex());
+			break;
 		default:
 			jsonValue = QJsonValue::fromVariant( value);
 	}
