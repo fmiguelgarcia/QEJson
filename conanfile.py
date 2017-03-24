@@ -1,29 +1,28 @@
 from conans import ConanFile, CMake 
+from conans.tools import os_info
 import multiprocessing
 
 class QEJsonS11nConan(ConanFile):
-    name = "QEJsonS11n"
+    name = "QEJson"
     version = "0.1.0"
-    requires = "QEAnnotation/0.1.0@fmiguelgarcia/stable"
+    requires = "QEEntity/0.1.0@fmiguelgarcia/stable"
     settings = "os", "compiler", "build_type", "arch"
     license = "https://www.gnu.org/licenses/lgpl-3.0-standalone.html"
     generators = "cmake"
     url = "https://github.com/fmiguelgarcia/QEJsonS11n.git"
     description = "JSon Serialization library based on Annotations"
-
-    def source(self):
-        self.run("git clone %s" % self.url) 
+    exports_sources = [ "src/*", "test/*", "tools/*", "CMakeLists.txt"] 
 
     def build(self):
         cmake = CMake( self.settings)
-        self.run( "cmake %s/QEJsonS11n %s" % (self.conanfile_directory, cmake.command_line))
-        self.run( "cmake --build . %s"  % cmake.build_config ) 
+        parallel_build_flags = ("-- -j %d " % multiprocessing.cpu_count()) if os_info.is_linux else ""
+        self.run( "cmake %s %s" % (self.conanfile_directory, cmake.command_line))
+        self.run( "cmake --build . %s %s"  % (cmake.build_config, parallel_build_flags))
 
     def package(self):
-        self.copy( pattern="*.hpp", dst="include/QEJsonS11n/", src="QEJsonS11n/src")
-        self.copy( pattern="LICENSE.LGPLv3", dst="share/QEJsonS11n")
-        self.copy( pattern="libQEJsonS11n.so*", dst="lib", src="src")
+        self.copy( pattern="*.hpp", dst="include/qe/json", src="src/qe/json")
+        self.copy( pattern="LICENSE.LGPLv3", dst="share/qe/json")
+        self.copy( pattern="libQEJson.so*", dst="lib", src="src/qe/json", links=True)
 
     def package_info(self):
-        self.cpp_info.libs.extend(["QEJsonS11n"])
-        self.cpp_info.includedirs.extend(["include/QEJsonS11n"])
+        self.cpp_info.libs.extend(["QEJson"])

@@ -24,44 +24,41 @@
  *
  * $QE_END_LICENSE$
  */
-
-#pragma once
-#include <QES11n.hpp>
-#include <QObject>
+#include <SerializedItem.hpp>
+#include <QIODevice>
 #include <QJsonDocument>
 
-class QEAnnotationModel;
-class QIODevice;
-class QEJsonS11n :  public QES11nBase
+using namespace qe::json;
+
+SerializedItem::SerializedItem( QIODevice *dev)
+	: m_dev( dev)
+{}
+
+SerializedItem::~SerializedItem()
+{}
+
+QByteArray SerializedItem::toJson( const QJsonDocument::JsonFormat format) const
 {
-	public:
-		QEJsonS11n( QIODevice* dev,
-					QObject *parent = nullptr,
-					const QJsonDocument::JsonFormat format = QJsonDocument::JsonFormat::Indented );
-		
-		void save( const QObject* const source) const override;
-		void load( QObject* const target) const override;
-		QString mimeType() const override;
-		
-		const QEJsonS11n & operator<<( const QObject *const source) const;
-		const QEJsonS11n & operator>>( QObject *const source) const;
+	QJsonDocument doc( jsonObject);
+	return doc.toJson( format);
+}
 
-	private:
-		Q_DISABLE_COPY(QEJsonS11n)
+void SerializedItem::flush( const QJsonDocument::JsonFormat format) const
+{
+	if( m_dev 
+		&& m_dev->isOpen() 
+		&& m_dev->isWritable())
+	{
+		m_dev->write( toJson( format));
+	}
+}
 
-		void save( const QObject* const o, QJsonObject& json) const;
+#if 0
+void SerializedItem::setJsonObject(const QJsonObject& jo)
+{
+	m_jsonObject = jo;
+}
 
-		QJsonValue toJsonValue( const QVariant& value) const;
-		QJsonValue nativeToJsonValue( const QVariant& value) const;
-		QJsonValue userTypeToJsonValue( const QObject* obj) const;
-		void writeProperty( const QEAnnotationModel& model, 
-				const QString& propertyName, const QObject* const obj, 
-				QJsonObject& jsonObj) const;
-
-		QVariant fromJsonValue( const QJsonValue& value) const;
-	
-	private:
-		
-		QIODevice* const m_dev;
-		const QJsonDocument::JsonFormat m_format;
-};
+QJsonObject SerializedItem::jsonObject() const
+{ return m_jsonObject; }
+#endif

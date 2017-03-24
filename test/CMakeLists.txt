@@ -1,17 +1,14 @@
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
-
-find_package( Qt5Core)
+include(${CMAKE_SOURCE_DIR}/tools/cmake/common.cmake)
 find_package( Qt5Test)
-set( CMAKE_AUTOMOC ON)
-set( CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set( QEJsonS11nTest_SRCS AnnotateClassOne.cpp AnnClassTwo.cpp 
-	QEJsonS11nTest.cpp)
-include_directories( ${PROJECT_SOURCE_DIR}/src )
+set( QEJsonTest_SRCS 
+	entity/book.cpp entity/chapter.cpp
+	QEJsonTest.cpp)
 
-add_executable( QEJsonS11nTest ${QEJsonS11nTest_SRCS})
-target_link_libraries( QEJsonS11nTest QEJsonS11n Qt5::Core Qt5::Test ${CONAN_LIBS})
-set_target_properties( QEJsonS11nTest PROPERTIES CXX_STANDARD 11)
+add_executable( QEJsonTest ${QEJsonTest_SRCS})
+target_link_libraries( QEJsonTest 
+	QEJson 
+	Qt5::Core Qt5::Test 
+	${CONAN_LIBS})
 
-add_test( NAME QEJsonS11nTest COMMAND  $<TARGET_FILE:QEJsonS11nTest>)
+add_test( NAME QEJsonTest COMMAND  $<TARGET_FILE:QEJsonTest>)

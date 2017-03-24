@@ -1,16 +1,12 @@
-#include "QEJsonS11n.hpp"
-#include <QByteArray>
-#include <QBuffer>
+#include <qe/json/QEJson.hpp>
 #include <QObject>
+
+using namespace qe::json;
 
 int main(int argc, char** argv)
 {
-	QByteArray data;
-	QBuffer buffer( &data);
-	if( buffer.open( QIODevice::ReadWrite))
-	{
-		QEJsonS11n s11n( &buffer);
-	}
+	QObject * o = new QObject();
+	QEJson::instance().save( o);
 
 	return 0;
 }
