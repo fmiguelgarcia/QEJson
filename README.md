@@ -1,2 +1,2 @@
-# QEJsonS11n
+# QEJson
 Json serialization library based on annotations
