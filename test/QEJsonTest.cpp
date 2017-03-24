@@ -68,7 +68,7 @@ void QEJsonTest::checkSaveReferences()
 	QEJson::instance().save( &book, &target);
 
 	const QJsonArray jsonChapters = target.jsonObject["chapters"].toArray();
-	QVERIFY( jsonChapters.size() == book.chapters.size());
+	QVERIFY( static_cast<uint>(jsonChapters.size()) == book.chapters.size());
 	
 	for( int i = 0; i < jsonChapters.size(); ++i)
 	{
