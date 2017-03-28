@@ -93,6 +93,22 @@ void QEJson::load( const QJsonObject& source,
 	AbstractSerializer::load( &si, target);
 }
 
+void QEJson::load( const QByteArray& source,
+	QObject* const target) const
+{
+	QJsonParseError parseError;
+	QJsonDocument doc = QJsonDocument::fromJson( source, &parseError);
+	if( parseError.error != QJsonParseError::NoError)
+	{
+		Exception::makeAndThrow(
+			QString( "QE Json has found a parse error at offset %1: %2")
+				.arg( parseError.error)
+				.arg( parseError.errorString()));
+	}
+
+	load( doc.object(), target);
+}
+
 void QEJson::save(ObjectContext &context, const ModelShd &model,
 						QObject *const source,
 						AbstractSerializedItem *const target) const

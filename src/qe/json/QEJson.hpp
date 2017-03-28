@@ -25,10 +25,12 @@
  * $QE_END_LICENSE$
  */
 #pragma once
+#include <qe/json/SerializedItem.hpp>
 #include <qe/entity/serialization/AbstractSerializer.hpp>
 #include <qe/entity/Types.hpp>
 #include <memory>
 #include <mutex>
+#include <utility>
 
 #define QE_JSON_QEJSON_GCC_BUG 1
 
@@ -44,7 +46,10 @@ namespace qe { namespace json {
 			void save( QObject* const source) const;
 			
 			void load( const QJsonObject& source, 
-					   QObject* const target) const;
+			   QObject* const target) const;
+			void load( const QByteArray& source,
+				QObject* const target) const;
+
 
 #if QE_JSON_QEJSON_GCC_BUG 
 			void save( QObject* const source, 
@@ -53,6 +58,34 @@ namespace qe { namespace json {
 			void load( const entity::AbstractSerializedItem* const source, 
 				QObject *const target) const override;
 #endif
+
+			// Save N parameters
+			// ===================================================================	
+			void saveN( SerializedItem& target) const 
+			{}
+	
+			template< class T, typename ...Args>
+			void saveN( SerializedItem& target, std::tuple<QString,T>& source, 
+					Args&&... params) const
+			{
+				saveN( target, std::get<0>( source), std::get<1>( source),
+					std::forward<Args>( params)...);
+			}
+
+			template< class T, typename ...Args>
+			void saveN( SerializedItem& target, const QString& key, 
+					T&& source, Args&&... params) const
+			{
+				SerializedItem part;
+				save( part, source);
+				target.jsonObject[ key] = part.jsonObject;
+				saveN( target.jsonObject, std::forward<Args>( params)...);
+			}
+
+			template<typename ...Args>
+			void saveN( SerializedItem& target, Args&&... params) const
+			{ saveN( target, std::forward<Args>( params)...);}
+
 
 		protected:
 			QEJson(); 
