@@ -37,8 +37,37 @@ using namespace qe::entity;
 using namespace qe::common;
 using namespace qe::json;
 
-void insert( ObjectContext& context, const Model &model, const QObject *source, 
-		SerializedItem* const target);
+namespace {
+
+	QJsonValue toJsonValue( const QVariant& value)
+	{
+		QJsonValue jsonValue;
+		switch( value.type())
+		{
+			case QMetaType::Type::QByteArray:
+				jsonValue = value.toByteArray().toHex().constData();
+				break;
+			default:
+				jsonValue = QJsonValue::fromVariant( value);
+		}
+
+		return jsonValue;
+	}
+
+	void insert( ObjectContext& context, const Model &model, const QObject *source,
+					 SerializedItem* const target)
+	{
+		for( const auto& eDef: model.entityDefs())
+		{
+			if( eDef->mappingType() == EntityDef::MappingType::NoMappingType)
+			{
+				const QVariant propertyValue = source->property( eDef->propertyName());
+				const QJsonValue jsonValue = toJsonValue( propertyValue);
+				target->insert( eDef->entityName(), jsonValue);
+			}
+		}
+	}
+}
 
 // SaveHelper
 // ============================================================================
@@ -84,44 +113,16 @@ void SaveHelper::saveOneToMany( ObjectContext& context, const Model &model,
 							refItem->metaObject());
 					save( context, refModel, refItem, &itemTarget);
 				}
-				jsonArray.append( itemTarget.jsonObject);
+				jsonArray.append( itemTarget.value());
 			}
-			target->jsonObject.insert( eDef->entityName(), jsonArray);
+			target->insert( eDef->entityName(), jsonArray);
 		}
 	}
 }
 
-
-// Free functions
-// ============================================================================
-
-QJsonValue toJsonValue( const QVariant& value)
+void SaveHelper::save(const QString& source, SerializedItem *const target) const
 {
-	QJsonValue jsonValue;
-	switch( value.type())
-	{
-		case QMetaType::Type::QByteArray:
-			jsonValue = value.toByteArray().toHex().constData();
-			break;
-		default:
-			jsonValue = QJsonValue::fromVariant( value);
-	}
-	
-	return jsonValue;
-}
-
-void insert( ObjectContext& context, const Model &model, const QObject *source, 
-		SerializedItem* const target)
-{
-	for( const auto& eDef: model.entityDefs())
-	{
-		if( eDef->mappingType() == EntityDef::MappingType::NoMappingType)
-		{
-			const QVariant propertyValue = source->property( eDef->propertyName());
-			const QJsonValue jsonValue = toJsonValue( propertyValue); 
-			target->jsonObject.insert( eDef->entityName(), jsonValue); 
-		}
-	}
+	target->setValue( QJsonValue::fromVariant( source));
 }
 
 

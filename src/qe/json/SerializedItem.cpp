@@ -27,6 +27,8 @@
 #include <SerializedItem.hpp>
 #include <QIODevice>
 #include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 
 using namespace qe::json;
 
@@ -34,12 +36,25 @@ SerializedItem::SerializedItem( QIODevice *dev)
 	: m_dev( dev)
 {}
 
+SerializedItem::SerializedItem( const QJsonValue& value)
+	: m_dev(nullptr)
+{
+	setValue( value);
+}
+
 SerializedItem::~SerializedItem()
 {}
 
 QByteArray SerializedItem::toJson( const QJsonDocument::JsonFormat format) const
 {
-	QJsonDocument doc( jsonObject);
+	QJsonObject object;
+	
+	if( !m_value.isObject())
+		object[ "value"] = m_value;
+	else
+		object = m_value.toObject();
+	
+	QJsonDocument doc( object);
 	return doc.toJson( format);
 }
 
@@ -53,12 +68,15 @@ void SerializedItem::flush( const QJsonDocument::JsonFormat format) const
 	}
 }
 
-#if 0
-void SerializedItem::setJsonObject(const QJsonObject& jo)
-{
-	m_jsonObject = jo;
-}
+void SerializedItem::setValue(const QJsonValue& other)
+{ m_value = other; }
 
-QJsonObject SerializedItem::jsonObject() const
-{ return m_jsonObject; }
-#endif
+QJsonValue SerializedItem::value() const
+{ return m_value; }
+
+void SerializedItem::insert(const QString& key, const QJsonValue& value)
+{
+	QJsonObject object = m_value.toObject();
+	object.insert( key, value);
+	m_value = object;
+}

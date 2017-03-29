@@ -32,34 +32,56 @@
 #include <qe/entity/EntityDef.hpp>
 #include <QStringBuilder>
 #include <QJsonArray>
+#include <QJsonValue>
+#include <QJsonObject>
 
 using namespace qe::json;
 using namespace qe::entity;
 using namespace qe::common;
 
+namespace {
+	QVariant toVariantByType( const int type, 
+		const QJsonValue& jsonValue)
+	{
+		QVariant value;
+		switch( type )
+		{
+			case QMetaType::Type::QByteArray:
+				value = QByteArray::fromHex( jsonValue.toString().toLocal8Bit());
+				break;
+			default:
+				value = jsonValue.toVariant();
+		}
+		return value;
+	}
+
+}
+
 void LoadHelper::load( ObjectContext& context, 
 	const ModelShd& model, const SerializedItem*const source, 
 	QObject*const target) const
 {
-	const QJsonObject& jsonObj = source->jsonObject; 
+	const QJsonValue value = source->value(); 
+	if( value.isObject())
+	{
+		const QJsonObject jsonObj = value.toObject();
 	
-	loadObjectFromJson( *model, jsonObj, target);
-	loadOneToMany( context, model, source, target);
+		loadObjectFromJson( *model, jsonObj, target);
+		loadOneToMany( context, model, source, target);
+	}
 }
 
-QVariant toVariant( int type, const QJsonValue& jsonValue)
+void LoadHelper::load( const SerializedItem* const source,
+	QObject* const target) const
 {
-	QVariant value;
-	switch( type )
-	{
-		case QMetaType::Type::QByteArray:
-			value = QByteArray::fromHex( jsonValue.toString().toLocal8Bit());
-			break;
-		default:
-			value = jsonValue.toVariant();
-	}
-	return value;
+	ObjectContext context;
+	const ModelShd model = ModelRepository::instance().model( target->metaObject());
+
+	load( context, model, source, target);
 }
+
+
+
 
 void LoadHelper::loadObjectFromJson( const Model& model, const QJsonObject& jsonObj, QObject* target) const
 {
@@ -67,7 +89,7 @@ void LoadHelper::loadObjectFromJson( const Model& model, const QJsonObject& json
 	{
 		if( eDef->mappingType() == EntityDef::MappingType::NoMappingType)
 		{
-			const QVariant value = toVariant( 
+			const QVariant value = toVariantByType( 
 				eDef->propertyType(), 
 				jsonObj[ eDef->entityName()]);
 			target->setProperty( eDef->propertyName(), value);
@@ -85,7 +107,9 @@ void LoadHelper::loadOneToMany( ObjectContext& context, const ModelShd& model,
 		if( eDef->mappingType() == EntityDef::MappingType::OneToMany)
 		{
 			ModelShd manyModel = ModelRepository::instance().model( eDef->mappingEntity());
-			const QJsonArray jsonArray = source->jsonObject[ eDef->entityName()]
+			const QJsonValue value = source->value();
+			const QJsonObject jsonObj = value.toObject();
+			const QJsonArray jsonArray = jsonObj[ eDef->entityName()]
 				.toArray();
 		
 			QVariantList wrapperList;
@@ -99,8 +123,7 @@ void LoadHelper::loadOneToMany( ObjectContext& context, const ModelShd& model,
 						QStringLiteral( "QE Json load helper cannot create and instance of class ")
 						% eDef->mappingEntity()->className());
 		
-				SerializedItem si;
-				si.jsonObject = jsonArray[i].toObject();
+				SerializedItem si( jsonArray[i]);
 				load( context, manyModel, &si, itemObj); 
 				wrapperList.push_back( QVariant::fromValue(itemObj));
 			}

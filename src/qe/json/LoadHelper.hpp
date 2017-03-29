@@ -26,6 +26,7 @@
  */
 #pragma once
 #include <qe/entity/Types.hpp>
+#include <qe/json/SerializedItem.hpp>
 
 class QJsonObject;
 namespace qe { namespace json {
@@ -38,7 +39,43 @@ namespace qe { namespace json {
 				const entity::ModelShd& model, const SerializedItem *const source, 
 				QObject *const target) const;
 				
+			void load( const SerializedItem* const source,
+				QObject* const target) const;
+
+			template< 
+				class T,
+				typename = typename std::enable_if< 
+					std::is_same<QString, T>::value, 
+				int>::type >
+			void load( const SerializedItem* const source,
+				T&& target) const
+			{
+				QJsonValue jsonValue = source->value();
+				if( jsonValue.isObject())
+					jsonValue = jsonValue.toObject().value("value");
+				target = toVariant<T>( jsonValue);
+			}
+		
 		protected:
+#if 0
+			template< class T,
+				typename = typename std::enable_if< 
+					std::is_same<QByteArray, T>::value, 
+				int>::type >
+			inline QVariant toVariant( const QJsonValue& value, T* d = nullptr) const
+			{ return value.toVariant();}
+#endif
+
+			/// @brief It is only to transform to QByteArray when we know target
+			/// type on compile time.
+			template< class T,
+				typename = typename std::enable_if< 
+					std::is_same<QByteArray, T>::value, 
+				int>::type >
+			inline QVariant toVariant( const QJsonValue& value, T* d = nullptr) const
+			{ return QByteArray::fromHex( value.toString().toUtf8());}
+			
+			
 			void loadObjectFromJson( const entity::Model& model,
 				const QJsonObject& jsonObj, QObject* target) const; 
 			

@@ -21,11 +21,12 @@ void QEJsonTest::checkSaveAutoIncrement()
 
 	SerializedItem target; 
 	QEJson::instance().save( &book, &target);
+	QJsonObject jsonObject = target.value().toObject();
 	
-	QVERIFY( target.jsonObject[ QLatin1String("title")].toString() == book.title);
-	QVERIFY( target.jsonObject[ QLatin1String("author")].toString() == book.author);
-	QVERIFY( target.jsonObject[ QLatin1String("pages")].toInt() == book.pages);
-	QVERIFY( target.jsonObject[ QLatin1String("binSignature")].toString().toLocal8Bit() == book.binSignature.toHex());
+	QVERIFY( jsonObject[ QLatin1String("title")].toString() == book.title);
+	QVERIFY( jsonObject[ QLatin1String("author")].toString() == book.author);
+	QVERIFY( jsonObject[ QLatin1String("pages")].toInt() == book.pages);
+	QVERIFY( jsonObject[ QLatin1String("binSignature")].toString().toLocal8Bit() == book.binSignature.toHex());
 }
 
 void QEJsonTest::checkSaveReferences()
@@ -40,10 +41,12 @@ void QEJsonTest::checkSaveReferences()
 	// Save book to get its id.
 	SerializedItem target;
 	QEJson::instance().save( &book, &target);
-	QVERIFY( target.jsonObject[ QLatin1String("title")].toString() == book.title);
-	QVERIFY( target.jsonObject[ QLatin1String("author")].toString() == book.author);
-	QVERIFY( target.jsonObject[ QLatin1String("pages")].toInt() == book.pages);
-	QVERIFY( target.jsonObject[ QLatin1String("binSignature")].toString().toLocal8Bit() == book.binSignature.toHex());
+	QJsonObject jsonObject = target.value().toObject();
+	
+	QVERIFY( jsonObject[ QLatin1String("title")].toString() == book.title);
+	QVERIFY( jsonObject[ QLatin1String("author")].toString() == book.author);
+	QVERIFY( jsonObject[ QLatin1String("pages")].toInt() == book.pages);
+	QVERIFY( jsonObject[ QLatin1String("binSignature")].toString().toLocal8Bit() == book.binSignature.toHex());
 
 	// Chapters don't use autoincrement id, so we generate them from book.id
 	Chapter ch1( nullptr, "Deducing Types");
@@ -67,7 +70,8 @@ void QEJsonTest::checkSaveReferences()
 	book.chapters = { ch1, ch2};
 	QEJson::instance().save( &book, &target);
 
-	const QJsonArray jsonChapters = target.jsonObject["chapters"].toArray();
+	jsonObject = target.value().toObject();
+	const QJsonArray jsonChapters = jsonObject["chapters"].toArray();
 	QVERIFY( static_cast<uint>(jsonChapters.size()) == book.chapters.size());
 	
 	for( int i = 0; i < jsonChapters.size(); ++i)

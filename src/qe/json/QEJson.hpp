@@ -26,8 +26,10 @@
  */
 #pragma once
 #include <qe/json/SerializedItem.hpp>
+#include <qe/json/LoadHelper.hpp>
 #include <qe/entity/serialization/AbstractSerializer.hpp>
 #include <qe/entity/Types.hpp>
+#include <QJsonObject>
 #include <memory>
 #include <mutex>
 #include <utility>
@@ -43,21 +45,50 @@ namespace qe { namespace json {
 		public:
 			static QEJson& instance();
 
-			void save( QObject* const source) const;
-			
-			void load( const QJsonObject& source, 
-			   QObject* const target) const;
-			void load( const QByteArray& source,
-				QObject* const target) const;
-
-
-#if QE_JSON_QEJSON_GCC_BUG 
+			// Save to Serialized Item 
+			// ===============================================================
 			void save( QObject* const source, 
 				entity::AbstractSerializedItem* const target) const override;
+	
+			void save( QObject* const source) const;
 			
+			// Save to SI
+			void save( const QString& source,
+				SerializedItem* const target) const;
+			void save( const int source,
+				SerializedItem* const target) const;
+
+	
+			// Load from Serialized Item
+			// ===============================================================
+	
 			void load( const entity::AbstractSerializedItem* const source, 
 				QObject *const target) const override;
-#endif
+		
+			template< class T>
+			void load( const SerializedItem* const source, 
+				T&& target) const
+			{
+				LoadHelper loader;
+				loader.load( source, std::forward<T>(target));
+			}
+				
+			// Load from ByteArray
+			template< class T>
+			void load( const QByteArray& source,
+				T&& target) const
+			{
+				load( parseOrThrow(source), std::forward<T>(target));
+			}
+			
+			template< class T>
+			void load( const QJsonObject& source,
+				T&& target) const
+			{
+				SerializedItem si( source);
+				load( si, target);
+			}
+
 
 			// Save N parameters
 			// ===================================================================	
@@ -78,8 +109,12 @@ namespace qe { namespace json {
 			{
 				SerializedItem part;
 				save( part, source);
-				target.jsonObject[ key] = part.jsonObject;
-				saveN( target.jsonObject, std::forward<Args>( params)...);
+				
+				target.insert( key, part.value());
+				QJsonObject jsonObj = target.value().toObject();
+				saveN( jsonObj, std::forward<Args>( params)...);
+				
+				target.setValue( jsonObj);
 			}
 
 			template<typename ...Args>
@@ -100,6 +135,8 @@ namespace qe { namespace json {
 				const entity::ModelShd& model,
 			  	const entity::AbstractSerializedItem *const source,
 				QObject *const target) const override;
+				
+			QJsonObject parseOrThrow( const QByteArray& data) const;
 
 		private:
 	};

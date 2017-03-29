@@ -25,6 +25,7 @@
  */
 #pragma once
 #include <qe/entity/Types.hpp>
+#include <QVariant>
 
 namespace qe { namespace json { 
 	
@@ -35,6 +36,8 @@ namespace qe { namespace json {
 			void save( entity::ObjectContext& context, 
 				const entity::ModelShd& model, QObject *const source, 
 				SerializedItem* const target) const;
+
+			void save( const QString& source, SerializedItem* const target) const;
 
 		private:
 			void saveOneToMany( entity::ObjectContext& context, 

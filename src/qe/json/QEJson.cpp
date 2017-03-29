@@ -49,6 +49,8 @@ namespace {
 
 		return jsonTarget;
 	}
+
+
 }
 
 QEJson &QEJson::instance()
@@ -62,52 +64,28 @@ QEJson &QEJson::instance()
 
 QEJson::QEJson()
 	: AbstractSerializer()
-{}
+{} 
 
-#if QE_JSON_QEJSON_GCC_BUG 
-void QEJson::save( QObject* const source, 
-	AbstractSerializedItem* const target) const
-{ AbstractSerializer::save( source, target); }
-
-void QEJson::load( const AbstractSerializedItem* const source, 
-	QObject *const target) const
-{ AbstractSerializer::load( source, target);}
-#endif
-
-void QEJson::save( QObject* const source) const
-{
-	// By default, write to standar output
-	QFile dev;
-	dev.open( stdout, QIODevice::WriteOnly);
-
-	SerializedItem si( &dev);
-	AbstractSerializer::save( source, &si); 
-} 
-
-void QEJson::load( const QJsonObject& source, 
-	QObject* const target) const
-{
-	SerializedItem si;
-	si.jsonObject = source;
-	
-	AbstractSerializer::load( &si, target);
-}
-
-void QEJson::load( const QByteArray& source,
-	QObject* const target) const
+QJsonObject QEJson::parseOrThrow( const QByteArray& data) const
 {
 	QJsonParseError parseError;
-	QJsonDocument doc = QJsonDocument::fromJson( source, &parseError);
+	QJsonDocument doc = QJsonDocument::fromJson( data, &parseError);
 	if( parseError.error != QJsonParseError::NoError)
 	{
 		Exception::makeAndThrow(
 			QString( "QE Json has found a parse error at offset %1: %2")
-				.arg( parseError.error)
-				.arg( parseError.errorString()));
+			.arg( parseError.error)
+			.arg( parseError.errorString()));
 	}
-
-	load( doc.object(), target);
+	return doc.object();
 }
+
+// Save
+// ======================================================================
+
+void QEJson::save( QObject* const source, 
+	AbstractSerializedItem* const target) const
+{ AbstractSerializer::save( source, target); }
 
 void QEJson::save(ObjectContext &context, const ModelShd &model,
 						QObject *const source,
@@ -118,6 +96,24 @@ void QEJson::save(ObjectContext &context, const ModelShd &model,
 	SaveHelper saver;
 	saver.save(context, model, source, jsonTarget);
 }
+
+void QEJson::save( QObject* const source) const
+{
+	// By default, write to standar output
+	QFile dev;
+	dev.open( stdout, QIODevice::WriteOnly);
+
+	SerializedItem si( &dev);
+	save( source, &si); 
+} 
+
+
+// Load 
+// ===========================================================================
+
+void QEJson::load( const AbstractSerializedItem* const source, 
+	QObject *const target) const
+{ AbstractSerializer::load( source, target);}
 
 void QEJson::load(ObjectContext &context, const ModelShd &model,
 						const AbstractSerializedItem *const source,

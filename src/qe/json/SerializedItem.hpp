@@ -28,6 +28,7 @@
 #include <qe/entity/serialization/AbstractSerializedItem.hpp>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonValue>
 
 class QIODevice;
 namespace qe { namespace json { 
@@ -37,22 +38,21 @@ namespace qe { namespace json {
 	{
 		public:
 			explicit SerializedItem( QIODevice *dev = nullptr);
+			explicit SerializedItem( const QJsonValue& value);
 			virtual ~SerializedItem();
 			
 			void flush(const QJsonDocument::JsonFormat format 
 				= QJsonDocument::JsonFormat::Indented) const;
-	
+
 			QByteArray toJson(const QJsonDocument::JsonFormat format
 				= QJsonDocument::JsonFormat::Indented) const;
 
-			QJsonObject jsonObject;
-			/*
-			void setJsonObject( const QJsonObject& jo);
-			QJsonObject jsonObject() const; 
-			*/
-			
+			void setValue( const QJsonValue& other);
+			QJsonValue value() const;
+			void insert( const QString& key, const QJsonValue& value);
+
 		private:
-			// QJsonObject m_jsonObject;
 			QIODevice *m_dev;
+			QJsonValue m_value;
 	};
 }}
