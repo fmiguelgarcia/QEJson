@@ -91,5 +91,53 @@ void QEJsonTest::checkSaveReferences()
 	QVERIFY( book == loadedBook);
 }
 
+void QEJsonTest::checkLoadHelperNativeTypes()
+{
+	SerializedItem si;
+	QString str;
+	QByteArray ba;
+	int integer;
+	double real;
+	
+	si.setValue( QJsonValue::fromVariant("Text"));
+	QEJson::instance().load( &si, str);
+	QVERIFY( si.value().toString() == str);
+
+	si.setValue( QJsonValue::fromVariant( QByteArray("AB1010").toHex()));
+	QEJson::instance().load( &si, ba);
+	QByteArray siContent = si.value().toString().toUtf8();
+	QVERIFY( siContent  == ba.toHex());
+	
+	si.setValue( QJsonValue::fromVariant( 13));
+	QEJson::instance().load(  &si, integer);
+	QVERIFY( si.value().toInt() == integer);
+	
+	si.setValue( QJsonValue::fromVariant( 3.14));
+	QEJson::instance().load( &si, real);
+	QVERIFY( si.value().toDouble() == real);
+}
+
+void QEJsonTest::checkSaveHelper()
+{
+	SerializedItem si;
+
+	const QString str( "Text"); 
+	QEJson::instance().save( str, &si);
+	QVERIFY( si.value().toString() == str);
+
+	const QByteArray ba( "AB1010");
+	QEJson::instance().save( ba, &si);
+	const QString siValue = si.value().toString();
+	QVERIFY( siValue == ba.toHex());
+	
+	const int integer = 13;
+	QEJson::instance().save( integer , &si);
+	QVERIFY( si.value().toInt() == integer);
+	
+	const double real = 3.14;
+	QEJson::instance().save( real, &si);
+	QVERIFY( si.value().toDouble() == real);
+}
+
 
 QTEST_MAIN(QEJsonTest)

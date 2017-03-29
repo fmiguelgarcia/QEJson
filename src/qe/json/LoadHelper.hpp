@@ -25,8 +25,11 @@
  * $QE_END_LICENSE$
  */
 #pragma once
-#include <qe/entity/Types.hpp>
+#include <qe/json/TypeTraits.hpp>
 #include <qe/json/SerializedItem.hpp>
+#include <qe/entity/Types.hpp>
+#include <QVariant>
+#include <QString>
 
 class QJsonObject;
 namespace qe { namespace json {
@@ -42,37 +45,31 @@ namespace qe { namespace json {
 			void load( const SerializedItem* const source,
 				QObject* const target) const;
 
-			template< 
+			template<
 				class T,
 				typename = typename std::enable_if< 
-					std::is_same<QString, T>::value, 
-				int>::type >
+					qe::json::is_json_type_supported<T>{}, 
+					int>::type
+			>
 			void load( const SerializedItem* const source,
 				T&& target) const
 			{
 				QJsonValue jsonValue = source->value();
 				if( jsonValue.isObject())
 					jsonValue = jsonValue.toObject().value("value");
-				target = toVariant<T>( jsonValue);
+				// const QVariant var = toVariant< typename std::decay<T>::type>( jsonValue, std::addressof(target));
+				const QVariant var = toVariant( jsonValue, std::addressof(target));
+				target = var.value< typename std::remove_reference<T>::type> (); 
 			}
-		
+
 		protected:
-#if 0
-			template< class T,
-				typename = typename std::enable_if< 
-					std::is_same<QByteArray, T>::value, 
-				int>::type >
-			inline QVariant toVariant( const QJsonValue& value, T* d = nullptr) const
+			template< class T>
+			inline QVariant toVariant( const QJsonValue& value, T* ) const
 			{ return value.toVariant();}
-#endif
 
 			/// @brief It is only to transform to QByteArray when we know target
 			/// type on compile time.
-			template< class T,
-				typename = typename std::enable_if< 
-					std::is_same<QByteArray, T>::value, 
-				int>::type >
-			inline QVariant toVariant( const QJsonValue& value, T* d = nullptr) const
+			inline QVariant toVariant( const QJsonValue& value, QByteArray* ) const
 			{ return QByteArray::fromHex( value.toString().toUtf8());}
 			
 			

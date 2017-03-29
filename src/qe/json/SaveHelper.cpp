@@ -83,6 +83,14 @@ void SaveHelper::save( ObjectContext& context, const ModelShd& model,
 	saveOneToMany( context, *model, source, target);
 }
 
+void SaveHelper::save( QObject*const source, SerializedItem*const target) const
+{
+	ObjectContext context;
+	const ModelShd model = ModelRepository::instance().model( source->metaObject());
+	save( context, model, source, target);
+}
+
+
 
 /// @todo Move this to common class? 
 void SaveHelper::saveOneToMany( ObjectContext& context, const Model &model, 
@@ -119,10 +127,3 @@ void SaveHelper::saveOneToMany( ObjectContext& context, const Model &model,
 		}
 	}
 }
-
-void SaveHelper::save(const QString& source, SerializedItem *const target) const
-{
-	target->setValue( QJsonValue::fromVariant( source));
-}
-
-

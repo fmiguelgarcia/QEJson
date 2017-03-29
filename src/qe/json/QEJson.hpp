@@ -27,6 +27,8 @@
 #pragma once
 #include <qe/json/SerializedItem.hpp>
 #include <qe/json/LoadHelper.hpp>
+#include <qe/json/SaveHelper.hpp>
+#include <qe/json/TypeTraits.hpp>
 #include <qe/entity/serialization/AbstractSerializer.hpp>
 #include <qe/entity/Types.hpp>
 #include <QJsonObject>
@@ -53,12 +55,29 @@ namespace qe { namespace json {
 			void save( QObject* const source) const;
 			
 			// Save to SI
-			void save( const QString& source,
-				SerializedItem* const target) const;
-			void save( const int source,
-				SerializedItem* const target) const;
+			template< class T,
+				typename = typename std::enable_if<
+					qe::json::is_json_type_supported<T>::value,
+					int>::type
+			>
+			void save( T&& source, SerializedItem* const target) const
+			{
+				SaveHelper saver;
+				saver.save( std::forward<T>(source), target);
+			}
+			
+			template< class T,
+				typename = typename std::enable_if<
+					qe::json::is_json_type_supported<T>::value,
+					int>::type
+			>
+			void save( const T& source, SerializedItem* const target) const
+			{
+				SaveHelper saver;
+				saver.save( source, target);
+			}
 
-	
+
 			// Load from Serialized Item
 			// ===============================================================
 	
@@ -86,7 +105,7 @@ namespace qe { namespace json {
 				T&& target) const
 			{
 				SerializedItem si( source);
-				load( si, target);
+				load( &si, target);
 			}
 
 

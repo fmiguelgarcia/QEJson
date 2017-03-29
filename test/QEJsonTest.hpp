@@ -7,5 +7,8 @@ class QEJsonTest: public QObject
 	private slots:
 		void checkSaveAutoIncrement();
 		void checkSaveReferences();
+		
+		void checkLoadHelperNativeTypes();
+		void checkSaveHelper();
 };
 

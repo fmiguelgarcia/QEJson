@@ -24,11 +24,15 @@
  * $QE_END_LICENSE$
  */
 #pragma once
+#include <qe/json/SerializedItem.hpp>
+#include <qe/json/TypeTraits.hpp>
 #include <qe/entity/Types.hpp>
+#include <QByteArray>
 #include <QVariant>
+#include <type_traits>
 
 namespace qe { namespace json { 
-	
+
 	class SerializedItem;
 	class SaveHelper
 	{
@@ -36,10 +40,37 @@ namespace qe { namespace json {
 			void save( entity::ObjectContext& context, 
 				const entity::ModelShd& model, QObject *const source, 
 				SerializedItem* const target) const;
+				
+			void save( QObject* const source,
+				SerializedItem* const taget) const;
 
-			void save( const QString& source, SerializedItem* const target) const;
+			template<
+				class T,
+				typename = typename std::enable_if< 
+					qe::json::is_json_type_supported<T>::type, 
+					int>::type
+			>
+			void save( T&& source, SerializedItem* const target) const
+			{ target->setValue( fromVariant( std::forward<T>(source)));}
+			
+			template<
+				class T /*,
+				typename = typename std::enable_if< is_json_type_supported<T>::type, int>::type */
+			>
+			void save( const T& source, SerializedItem* const target) const
+			{ target->setValue( fromVariant( source));}
 
 		private:
+			template< class T>
+			inline QJsonValue fromVariant( T&& source) const
+			{ return QJsonValue::fromVariant( source); }
+			
+			inline QJsonValue fromVariant( const QByteArray& source) const
+			{ return QJsonValue( QString::fromUtf8( source.toHex()));}
+
+			inline QJsonValue fromVariant( QByteArray&& source) const
+			{ return QJsonValue( QString::fromUtf8( source.toHex()));}
+			
 			void saveOneToMany( entity::ObjectContext& context, 
 				const entity::Model &model, QObject *source, 
 				SerializedItem* const target) const;
