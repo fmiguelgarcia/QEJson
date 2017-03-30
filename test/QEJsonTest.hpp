@@ -8,7 +8,20 @@ class QEJsonTest: public QObject
 		void checkSaveAutoIncrement();
 		void checkSaveReferences();
 		
-		void checkLoadHelperNativeTypes();
 		void checkSaveHelper();
+		
+		// Load Helper test
+		void checkLoadHelperBoolType_data();
+		void checkLoadHelperBoolType();
+		void checkLoadHelperIntType_data();
+		void checkLoadHelperIntType();
+		void checkLoadHelperDoubleType_data();
+		void checkLoadHelperDoubleType();
+		
+		void checkLoadHelperStringType_data();
+		void checkLoadHelperStringType();
+
+		void checkLoadHelperQByteArrayType_data();
+		void checkLoadHelperQByteArrayType();
 };
 
