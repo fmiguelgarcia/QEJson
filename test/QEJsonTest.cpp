@@ -200,6 +200,33 @@ void QEJsonTest::checkLoadHelperQByteArrayType()
 	QVERIFY( input == output);
 }
 
+void QEJsonTest::checkLoadHelperQVariantType_data()
+{
+	QTest::addColumn<QVariant>( "input");
+	
+	QTest::newRow("1") << QVariant();
+	QTest::newRow("2") << QVariant( QUrl( "http:://www.kde.org"));
+	QTest::newRow("3") << QVariant( QString( "String test"));
+	QTest::newRow("4") << QVariant( 5);
+	QTest::newRow("6") << QVariant( 1034u);
+	QTest::newRow("7") << QVariant( true);
+	QTest::newRow("8") << QVariant( false);
+	QTest::newRow("9") << QVariant( false);
+	QTest::newRow("10") << QVariant( 3.14159265358);
+}
+
+void QEJsonTest::checkLoadHelperQVariantType()
+{ 
+	QFETCH( QVariant, input);
+	QVariant output;
+	SerializedItem si;
+	
+	si.setValue( QJsonValue::fromVariant( input));
+	QEJson::instance().load(  &si, output);
+	QVERIFY( input == output);
+}
+
+
 #if 0
 void QEJsonTest::checkLoadHelperNativeTypes()
 {

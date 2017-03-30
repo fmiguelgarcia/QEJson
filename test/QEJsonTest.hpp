@@ -23,5 +23,8 @@ class QEJsonTest: public QObject
 
 		void checkLoadHelperQByteArrayType_data();
 		void checkLoadHelperQByteArrayType();
+
+		void checkLoadHelperQVariantType_data();
+		void checkLoadHelperQVariantType();
 };
 

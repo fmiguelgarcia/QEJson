@@ -27,6 +27,7 @@
 #pragma once
 #include <QString>
 #include <QByteArray>
+#include <QVariant>
 #include <type_traits>
 
 namespace qe { namespace json { 
@@ -69,6 +70,9 @@ namespace qe { namespace json {
 				typename std::decay<T>::type >::type
 			,typename std::is_same<
 				QByteArray,
+				typename std::decay<T>::type >::type
+			,typename std::is_same<
+				QVariant,
 				typename std::decay<T>::type >::type
 			,typename std::is_same<
 				QChar,
