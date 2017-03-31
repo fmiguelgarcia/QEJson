@@ -62,6 +62,16 @@ namespace qe { namespace json {
 				target = var.value< typename std::remove_reference<T>::type> (); 
 			}
 
+			void load( const SerializedItem* const source,
+				QVariant& target) const
+			{
+				QJsonValue jsonValue = source->value();
+				if( !jsonValue.isNull())
+					target = jsonValue.toVariant();
+				else
+					target = QVariant();
+			}
+
 		protected:
 			template< class T>
 			inline QVariant toVariant( const QJsonValue& value, T* ) const
