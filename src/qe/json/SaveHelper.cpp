@@ -61,7 +61,8 @@ namespace {
 		{
 			if( eDef->mappingType() == EntityDef::MappingType::NoMappingType)
 			{
-				const QVariant propertyValue = source->property( eDef->propertyName());
+				const QByteArray& propName = eDef->propertyName();
+				const QVariant propertyValue = source->property( propName);
 				const QJsonValue jsonValue = toJsonValue( propertyValue);
 				target->insert( eDef->entityName(), jsonValue);
 			}
