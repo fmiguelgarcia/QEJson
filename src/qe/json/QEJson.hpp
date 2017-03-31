@@ -29,7 +29,7 @@
 #include <qe/json/LoadHelper.hpp>
 #include <qe/json/SaveHelper.hpp>
 #include <qe/json/TypeTraits.hpp>
-#include <qe/entity/serialization/AbstractSerializer.hpp>
+#include <qe/entity/AbstractSerializer.hpp>
 #include <qe/entity/Types.hpp>
 #include <QJsonObject>
 #include <memory>

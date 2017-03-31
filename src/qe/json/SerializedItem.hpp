@@ -25,7 +25,7 @@
  * $QE_END_LICENSE$
  */
 #pragma once
-#include <qe/entity/serialization/AbstractSerializedItem.hpp>
+#include <qe/entity/AbstractSerializedItem.hpp>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
