@@ -23,6 +23,8 @@ class QEJsonS11nConan(ConanFile):
         self.copy( pattern="*.hpp", dst="include/qe/json", src="src/qe/json")
         self.copy( pattern="LICENSE.LGPLv3", dst="share/qe/json")
         self.copy( pattern="libQEJson.so*", dst="lib", src="src/qe/json", links=True)
+        self.copy( pattern="libQEJson.dll", dst="lib", src="src/qe/json/bin")
+        self.copy( pattern="libQEJson.dll.a", dst="lib", src="src/qe/json/lib")
 
     def package_info(self):
         self.cpp_info.libs.extend(["QEJson"])
