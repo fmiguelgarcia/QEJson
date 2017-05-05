@@ -42,26 +42,54 @@ namespace qe { namespace json {
 				const entity::ModelShd& model, QObject *const source, 
 				SerializedItem* const target) const;
 				
-			void save( QObject* const source,
-				SerializedItem* const taget) const;
+			template<
+				class T,
+				class = typename std::enable_if<
+					qe::json::is_json_type_supported<T>::value
+					|| std::is_same<
+						QVariant,
+						typename std::decay<T>::type >::value ,
+					int>::type
+			>
+			inline void save( T&& source, SerializedItem* const target) const
+			{
+				saveFundamental( std::forward<T>(source), target);
+			}
 
 			template<
 				class T,
-				typename = typename std::enable_if< 
-					qe::json::is_json_type_supported<T>::type, 
+				class = typename std::enable_if<
+					qe::json::is_json_type_supported<T>::value
+					|| std::is_same<
+						QVariant,
+						typename std::decay<T>::type >::value,
 					int>::type
 			>
-			void save( T&& source, SerializedItem* const target) const
-			{ target->setValue( fromVariant( std::forward<T>(source)));}
-			
+			inline void save( const T& source, SerializedItem* const target) const
+			{
+				saveFundamental( source, target);
+			}
+
 			template<
-				class T /*,
-				typename = typename std::enable_if< is_json_type_supported<T>::type, int>::type */
+				class T,
+				class = typename std::enable_if<
+					std::is_base_of< QObject, T>::value,
+					int>::type
 			>
-			void save( const T& source, SerializedItem* const target) const
-			{ target->setValue( fromVariant( source));}
+			inline void save( T* const source,
+				SerializedItem* const target) const
+			{
+				saveObjectPointer( source, target);
+			}
 
 		private:
+			template< class T>
+			void saveFundamental( T&& source, SerializedItem* const target) const
+			{ target->setValue( fromVariant( std::forward<T>(source)));}
+
+			void saveObjectPointer( QObject* const source,
+				SerializedItem* const target) const;
+
 			template< class T>
 			inline QJsonValue fromVariant( T&& source) const
 			{ return QJsonValue::fromVariant( source); }

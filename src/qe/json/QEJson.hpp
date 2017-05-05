@@ -56,22 +56,14 @@ namespace qe { namespace json {
 			void save( QObject* const source) const;
 			
 			// Save to SI
-			template< class T,
-				typename = typename std::enable_if<
-					qe::json::is_json_type_supported<T>::value,
-					int>::type
-			>
+            template< class T>
 			void save( T&& source, SerializedItem* const target) const
 			{
 				SaveHelper saver;
 				saver.save( std::forward<T>(source), target);
 			}
 			
-			template< class T,
-				typename = typename std::enable_if<
-					qe::json::is_json_type_supported<T>::value,
-					int>::type
-			>
+            template< class T>
 			void save( const T& source, SerializedItem* const target) const
 			{
 				SaveHelper saver;
