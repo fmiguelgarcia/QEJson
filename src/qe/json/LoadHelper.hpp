@@ -46,7 +46,9 @@ namespace qe { namespace json {
 			/// @brief It loads fundamental types.
 			template<
 				class T,
-				class = std::enable_if_t< qe::json::is_json_type_supported<T>::value >
+				class = typename std::enable_if< 
+					qe::json::is_json_type_supported<T>::value, 
+					int>::type
 			>
 			inline void load( const SerializedItem* const source,
 				T&& target) const
@@ -57,7 +59,9 @@ namespace qe { namespace json {
 			/// @brief It loads object pointers which class is a QObject derived class.
 			template<
 				class T,
-				class = std::enable_if_t< std::is_base_of< QObject, T>::value >
+				class = typename std::enable_if< 
+					std::is_base_of< QObject, T>::value,
+			  		int>::type
 			>
 			inline void load( const SerializedItem* const source,
 				T* target) const
@@ -68,9 +72,9 @@ namespace qe { namespace json {
 			/// @brief It loads into QVariant objects.
 			template<
 				class T,
-				class = std::enable_if_t<
-					std::is_same< QVariant, std::decay<T>::type >::value
-				>
+				class = typename std::enable_if<
+					std::is_same< QVariant, typename std::decay<T>::type>::value,
+					int>::type
 			>
 			inline void load( const SerializedItem* const source,
 				T& target) const
