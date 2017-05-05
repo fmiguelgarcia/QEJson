@@ -71,7 +71,7 @@ void LoadHelper::load( ObjectContext& context,
 	}
 }
 
-void LoadHelper::load( const SerializedItem* const source,
+void LoadHelper::loadObjectPointer( const SerializedItem* const source,
 	QObject* const target) const
 {
 	ObjectContext context;
@@ -80,8 +80,21 @@ void LoadHelper::load( const SerializedItem* const source,
 	load( context, model, source, target);
 }
 
+void LoadHelper::loadVariant(
+	const SerializedItem* const source,
+	QVariant& target) const
+{
+	QJsonValue jsonValue = source->value();
+	if( !jsonValue.isNull())
+		target = jsonValue.toVariant();
+	else
+		target = QVariant();
+}
 
-
+QVariant LoadHelper::toVariant( const QJsonValue& value, QByteArray* ) const
+{
+	return QByteArray::fromHex( value.toString().toUtf8());
+}
 
 void LoadHelper::loadObjectFromJson( const Model& model, const QJsonObject& jsonObj, QObject* target) const
 {

@@ -6,12 +6,14 @@ set( QEJson_MAYOR_VERSION 0)
 set( QEJson_MINOR_VERSION 1)
 set( QEJson_BUILD_VERSION 0)
 
-set( QEJson_SRCS 
+set( QEJson_SRCS
+	Global.hpp TypeTraits.hpp
 	SerializedItem.cpp 
 	SaveHelper.cpp LoadHelper.cpp
 	QEJson.cpp)
 
 # Link
+add_definitions( -DQEJSON_LIBRARY)
 add_library( QEJson SHARED ${QEJson_SRCS})
 target_link_libraries( QEJson Qt5::Core ${CONAN_LIBS}) 
 set_target_properties( QEJson PROPERTIES 

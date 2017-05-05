@@ -25,6 +25,7 @@
  * $QE_END_LICENSE$
  */
 #pragma once
+#include <qe/json/Global.hpp>
 #include <qe/json/SerializedItem.hpp>
 #include <qe/json/LoadHelper.hpp>
 #include <qe/json/SaveHelper.hpp>
@@ -41,7 +42,7 @@
 class QJsonObject;
 namespace qe { namespace json {
 
-	class QEJson 
+    class QEJSON_EXPORT QEJson
 		: public qe::entity::AbstractSerializer
 	{
 		public:

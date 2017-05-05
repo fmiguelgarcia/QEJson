@@ -71,9 +71,9 @@ namespace qe { namespace json {
 			,typename std::is_same<
 				QByteArray,
 				typename std::decay<T>::type >::type
-			,typename std::is_same<
+            /*,typename std::is_same<
 				QVariant,
-				typename std::decay<T>::type >::type
+                typename std::decay<T>::type >::type*/
 			,typename std::is_same<
 				QChar,
 				typename std::decay<T>::type >::type

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 francisco miguel garcia rodriguez  
+ * Copyright (C) 2017 francisco miguel garcia rodriguez
  * Contact: http://www.dmious.com/qe/licensing/
  *
  * This file is part of the QE Common module of the QE Toolkit.
@@ -16,7 +16,7 @@
  * GNU Lesser General Public License Usage
  * Alternatively, this file may be used under the terms of the GNU Lesser
  * General Public License version 3 as published by the Free
- * Software Foundation and appearing in the file LICENSE.LGPLv3 
+ * Software Foundation and appearing in the file LICENSE.LGPLv3
  * included in the packaging of this file. Please review the
  * following information to ensure the GNU Lesser General Public License
  * requirements will be met: https://www.gnu.org/licenses/lgpl.html and
@@ -24,36 +24,12 @@
  *
  * $QE_END_LICENSE$
  */
+
 #pragma once
-#include <qe/json/Global.hpp>
-#include <qe/entity/AbstractSerializedItem.hpp>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonValue>
 
-class QIODevice;
-namespace qe { namespace json { 
+#if defined(QEJSON_LIBRARY)
+#  define QEJSON_EXPORT Q_DECL_EXPORT
+#else
+#  define QEJSON_EXPORT Q_DECL_IMPORT
+#endif
 
-    class QEJSON_EXPORT SerializedItem
-		: public qe::entity::AbstractSerializedItem
-	{
-		public:
-			explicit SerializedItem( QIODevice *dev = nullptr);
-			explicit SerializedItem( const QJsonValue& value);
-			virtual ~SerializedItem();
-			
-			void flush(const QJsonDocument::JsonFormat format 
-				= QJsonDocument::JsonFormat::Indented) const;
-
-			QByteArray toJson(const QJsonDocument::JsonFormat format
-				= QJsonDocument::JsonFormat::Indented) const;
-
-			void setValue( const QJsonValue& other);
-			QJsonValue value() const;
-			void insert( const QString& key, const QJsonValue& value);
-
-		private:
-			QIODevice *m_dev;
-			QJsonValue m_value;
-	};
-}}

@@ -24,6 +24,7 @@
  * $QE_END_LICENSE$
  */
 #pragma once
+#include <qe/json/Global.hpp>
 #include <qe/json/SerializedItem.hpp>
 #include <qe/json/TypeTraits.hpp>
 #include <qe/entity/Types.hpp>
@@ -34,7 +35,7 @@
 namespace qe { namespace json { 
 
 	class SerializedItem;
-	class SaveHelper
+    class QEJSON_EXPORT SaveHelper
 	{
 		public:
 			void save( entity::ObjectContext& context, 

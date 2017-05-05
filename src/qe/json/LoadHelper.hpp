@@ -25,6 +25,7 @@
  * $QE_END_LICENSE$
  */
 #pragma once
+#include <qe/json/Global.hpp>
 #include <qe/json/TypeTraits.hpp>
 #include <qe/json/SerializedItem.hpp>
 #include <qe/entity/Types.hpp>
@@ -35,41 +36,66 @@ class QJsonObject;
 namespace qe { namespace json {
 	
 	class SerializedItem;
-	class LoadHelper
+	class QEJSON_EXPORT LoadHelper
 	{
 		public:
 			void load( entity::ObjectContext& context, 
 				const entity::ModelShd& model, const SerializedItem *const source, 
 				QObject *const target) const;
-				
-			void load( const SerializedItem* const source,
-				QObject* const target) const;
 
+			/// @brief It loads fundamental types.
 			template<
 				class T,
-				typename = typename std::enable_if< 
-					qe::json::is_json_type_supported<T>{}, 
-					int>::type
+				class = std::enable_if_t< qe::json::is_json_type_supported<T>::value >
 			>
-			void load( const SerializedItem* const source,
+			inline void load( const SerializedItem* const source,
+				T&& target) const
+			{
+				loadFundamental( source, std::forward<T>(target));
+			}
+
+			/// @brief It loads object pointers which class is a QObject derived class.
+			template<
+				class T,
+				class = std::enable_if_t< std::is_base_of< QObject, T>::value >
+			>
+			inline void load( const SerializedItem* const source,
+				T* target) const
+			{
+				loadObjectPointer( source, target);
+			}
+
+			/// @brief It loads into QVariant objects.
+			template<
+				class T,
+				class = std::enable_if_t<
+					std::is_same< QVariant, std::decay<T>::type >::value
+				>
+			>
+			inline void load( const SerializedItem* const source,
+				T& target) const
+			{
+				loadVariant( source, target);
+			}
+
+			void loadObjectPointer(
+				const SerializedItem* const source,
+				QObject* const target) const;
+
+			void loadVariant(
+				const SerializedItem* const source,
+				QVariant& target) const;
+
+			template< class T>
+			void loadFundamental( const SerializedItem* const source,
 				T&& target) const
 			{
 				QJsonValue jsonValue = source->value();
 				if( jsonValue.isObject())
 					jsonValue = jsonValue.toObject().value("value");
-				// const QVariant var = toVariant< typename std::decay<T>::type>( jsonValue, std::addressof(target));
-				const QVariant var = toVariant( jsonValue, std::addressof(target));
-				target = var.value< typename std::remove_reference<T>::type> (); 
-			}
 
-			void load( const SerializedItem* const source,
-				QVariant& target) const
-			{
-				QJsonValue jsonValue = source->value();
-				if( !jsonValue.isNull())
-					target = jsonValue.toVariant();
-				else
-					target = QVariant();
+				const QVariant var = toVariant( jsonValue, std::addressof(target));
+				target = var.value< typename std::remove_reference<T>::type> ();
 			}
 
 		protected:
@@ -79,9 +105,8 @@ namespace qe { namespace json {
 
 			/// @brief It is only to transform to QByteArray when we know target
 			/// type on compile time.
-			inline QVariant toVariant( const QJsonValue& value, QByteArray* ) const
-			{ return QByteArray::fromHex( value.toString().toUtf8());}
-			
+			QVariant toVariant( const QJsonValue& value,
+				QByteArray* ) const;
 			
 			void loadObjectFromJson( const entity::Model& model,
 				const QJsonObject& jsonObj, QObject* target) const; 
