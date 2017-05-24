@@ -41,8 +41,9 @@
 
 class QJsonObject;
 namespace qe { namespace json {
+	class QEJsonPrivate;
 
-    class QEJSON_EXPORT QEJson
+	class QEJSON_EXPORT QEJson
 		: public qe::entity::AbstractSerializer
 	{
 		public:
@@ -101,7 +102,6 @@ namespace qe { namespace json {
 				load( &si, target);
 			}
 
-
 			// Save N parameters
 			// ===================================================================	
 			void saveN( SerializedItem& target) const 
@@ -151,5 +151,6 @@ namespace qe { namespace json {
 			QJsonObject parseOrThrow( const QByteArray& data) const;
 
 		private:
+			Q_DECLARE_PRIVATE(QEJson);
 	};
 }}

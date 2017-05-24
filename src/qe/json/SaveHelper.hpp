@@ -33,11 +33,14 @@
 #include <type_traits>
 
 namespace qe { namespace json { 
-
+	class SaveHelperPrivate;
 	class SerializedItem;
-    class QEJSON_EXPORT SaveHelper
+
+	class QEJSON_EXPORT SaveHelper
 	{
 		public:
+			virtual ~SaveHelper();
+
 			void save( entity::ObjectContext& context, 
 				const entity::ModelShd& model, QObject *const source, 
 				SerializedItem* const target) const;
@@ -82,6 +85,9 @@ namespace qe { namespace json {
 				saveObjectPointer( source, target);
 			}
 
+		protected:
+			SaveHelperPrivate* d_ptr;
+
 		private:
 			template< class T>
 			void saveFundamental( T&& source, SerializedItem* const target) const
@@ -103,6 +109,8 @@ namespace qe { namespace json {
 			void saveOneToMany( entity::ObjectContext& context, 
 				const entity::Model &model, QObject *source, 
 				SerializedItem* const target) const;
+
+			Q_DECLARE_PRIVATE( SaveHelper);
 	};
 }}
 	

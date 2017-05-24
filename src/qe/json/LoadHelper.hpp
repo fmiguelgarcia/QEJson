@@ -34,11 +34,14 @@
 
 class QJsonObject;
 namespace qe { namespace json {
-	
 	class SerializedItem;
+	class LoadHelperPrivate;
+
 	class QEJSON_EXPORT LoadHelper
 	{
 		public:
+			virtual ~LoadHelper();
+
 			void load( entity::ObjectContext& context, 
 				const entity::ModelShd& model, const SerializedItem *const source, 
 				QObject *const target) const;
@@ -118,5 +121,10 @@ namespace qe { namespace json {
 			void loadOneToMany( entity::ObjectContext& context, 
 				const entity::ModelShd& model, const SerializedItem *const source,
 				QObject* const target) const;
+
+			LoadHelperPrivate *d_ptr;
+
+		private:
+			Q_DECLARE_PRIVATE( LoadHelper);
 	};
 }}

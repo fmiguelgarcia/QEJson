@@ -57,6 +57,9 @@ namespace {
 
 }
 
+LoadHelper::~LoadHelper()
+{}
+
 void LoadHelper::load( ObjectContext& context, 
 	const ModelShd& model, const SerializedItem*const source, 
 	QObject*const target) const

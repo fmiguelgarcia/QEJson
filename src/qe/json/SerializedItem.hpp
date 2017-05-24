@@ -33,8 +33,9 @@
 
 class QIODevice;
 namespace qe { namespace json { 
+	class SerializedItemPrivate;
 
-    class QEJSON_EXPORT SerializedItem
+   class QEJSON_EXPORT SerializedItem
 		: public qe::entity::AbstractSerializedItem
 	{
 		public:
@@ -55,5 +56,7 @@ namespace qe { namespace json {
 		private:
 			QIODevice *m_dev;
 			QJsonValue m_value;
+
+			Q_DECLARE_PRIVATE(SerializedItem);
 	};
 }}
