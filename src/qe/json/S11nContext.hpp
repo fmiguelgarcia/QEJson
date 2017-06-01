@@ -26,22 +26,24 @@
  */
 #pragma once
 #include <qe/json/Global.hpp>
-#include <qe/entity/AbstractSerializedItem.hpp>
+#include <qe/entity/AbstractS11nContext.hpp>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
 
 class QIODevice;
 namespace qe { namespace json { 
-	class SerializedItemPrivate;
+	class S11nContextPrivate;
 
-   class QEJSON_EXPORT SerializedItem
-		: public qe::entity::AbstractSerializedItem
+   class QEJSON_EXPORT S11nContext
+		: public qe::entity::AbstractS11nContext
 	{
 		public:
-			explicit SerializedItem( QIODevice *dev = nullptr);
-			explicit SerializedItem( const QJsonValue& value);
-			virtual ~SerializedItem();
+			explicit S11nContext( QIODevice *dev = nullptr);
+			explicit S11nContext( const QJsonValue& json);
+			// explicit S11nContext( const QJsonObject& json);
+			explicit S11nContext( const QByteArray& json);
+			virtual ~S11nContext();
 			
 			void flush(const QJsonDocument::JsonFormat format 
 				= QJsonDocument::JsonFormat::Indented) const;
@@ -57,6 +59,6 @@ namespace qe { namespace json {
 			QIODevice *m_dev;
 			QJsonValue m_value;
 
-			Q_DECLARE_PRIVATE(SerializedItem);
+			Q_DECLARE_PRIVATE(S11nContext);
 	};
 }}

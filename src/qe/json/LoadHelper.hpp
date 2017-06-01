@@ -27,14 +27,14 @@
 #pragma once
 #include <qe/json/Global.hpp>
 #include <qe/json/TypeTraits.hpp>
-#include <qe/json/SerializedItem.hpp>
+#include <qe/json/S11nContext.hpp>
 #include <qe/entity/Types.hpp>
 #include <QVariant>
 #include <QString>
 
 class QJsonObject;
 namespace qe { namespace json {
-	class SerializedItem;
+	class S11nContext;
 	class LoadHelperPrivate;
 
 	class QEJSON_EXPORT LoadHelper
@@ -42,9 +42,10 @@ namespace qe { namespace json {
 		public:
 			virtual ~LoadHelper();
 
-			void load( entity::ObjectContext& context, 
-				const entity::ModelShd& model, const SerializedItem *const source, 
-				QObject *const target) const;
+			void load( 
+				const entity::ModelShd& model, 
+				QObject *const target,
+				const S11nContext *const source) const;
 
 			/// @brief It loads fundamental types.
 			template<
@@ -53,10 +54,11 @@ namespace qe { namespace json {
 					qe::json::is_json_type_supported<T>::value, 
 					int>::type
 			>
-			inline void load( const SerializedItem* const source,
-				T&& target) const
+			inline void load( 
+				T&& target,
+				const S11nContext* const context) const
 			{
-				loadFundamental( source, std::forward<T>(target));
+				loadFundamental( std::forward<T>(target), context);
 			}
 
 			/// @brief It loads object pointers which class is a QObject derived class.
@@ -66,10 +68,11 @@ namespace qe { namespace json {
 					std::is_base_of< QObject, T>::value,
 			  		int>::type
 			>
-			inline void load( const SerializedItem* const source,
-				T* target) const
+			inline void load(
+				T* target,
+				const S11nContext* const context) const
 			{
-				loadObjectPointer( source, target);
+				loadObjectPointer( target, context);
 			}
 
 			/// @brief It loads into QVariant objects.
@@ -79,25 +82,28 @@ namespace qe { namespace json {
 					std::is_same< QVariant, typename std::decay<T>::type>::value,
 					int>::type
 			>
-			inline void load( const SerializedItem* const source,
-				T& target) const
+			inline void load( 
+				T& target,
+				const S11nContext* const context) const
 			{
-				loadVariant( source, target);
+				loadVariant( target, context);
 			}
 
+		protected:
 			void loadObjectPointer(
-				const SerializedItem* const source,
-				QObject* const target) const;
+				QObject* const target,
+				const S11nContext* const context) const;
 
 			void loadVariant(
-				const SerializedItem* const source,
-				QVariant& target) const;
+				QVariant& target,
+				const S11nContext* const context) const;
 
 			template< class T>
-			void loadFundamental( const SerializedItem* const source,
-				T&& target) const
+			void loadFundamental(
+				T&& target,
+				const S11nContext* const context) const
 			{
-				QJsonValue jsonValue = source->value();
+				QJsonValue jsonValue = context->value();
 				if( jsonValue.isObject())
 					jsonValue = jsonValue.toObject().value("value");
 
@@ -112,15 +118,19 @@ namespace qe { namespace json {
 
 			/// @brief It is only to transform to QByteArray when we know target
 			/// type on compile time.
-			QVariant toVariant( const QJsonValue& value,
+			QVariant toVariant( 
+				const QJsonValue& value,
 				QByteArray* ) const;
 			
-			void loadObjectFromJson( const entity::Model& model,
-				const QJsonObject& jsonObj, QObject* target) const; 
+			void loadObjectFromJson( 
+				const entity::Model& model,
+				const QJsonObject& jsonObj, 
+				QObject* target) const; 
 			
-			void loadOneToMany( entity::ObjectContext& context, 
-				const entity::ModelShd& model, const SerializedItem *const source,
-				QObject* const target) const;
+			void loadOneToMany( 
+				const entity::ModelShd& model, 
+				QObject* const target,
+				const S11nContext *const context) const;
 
 			LoadHelperPrivate *d_ptr;
 

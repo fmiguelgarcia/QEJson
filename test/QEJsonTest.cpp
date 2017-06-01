@@ -2,7 +2,7 @@
 #include "entity/book.hpp"
 #include "entity/chapter.hpp"
 #include <qe/json/QEJson.hpp>
-#include <qe/json/SerializedItem.hpp>
+#include <qe/json/S11nContext.hpp>
 
 #include <QCryptographicHash>
 #include <QJsonArray>
@@ -19,9 +19,9 @@ void QEJsonTest::checkSaveAutoIncrement()
   	book.binSignature = QCryptographicHash::hash( book.title.toUtf8(),
 		QCryptographicHash::Sha256);
 
-	SerializedItem target; 
-	QEJson::instance().save( &book, &target);
-	QJsonObject jsonObject = target.value().toObject();
+	S11nContext context; 
+	QEJson::instance().save( &book, &context);
+	QJsonObject jsonObject = context.value().toObject();
 	
 	QVERIFY( jsonObject[ QLatin1String("title")].toString() == book.title);
 	QVERIFY( jsonObject[ QLatin1String("author")].toString() == book.author);
@@ -39,9 +39,9 @@ void QEJsonTest::checkSaveReferences()
 		QCryptographicHash::Sha256);
 
 	// Save book to get its id.
-	SerializedItem target;
-	QEJson::instance().save( &book, &target);
-	QJsonObject jsonObject = target.value().toObject();
+	S11nContext context;
+	QEJson::instance().save( &book, &context);
+	QJsonObject jsonObject = context.value().toObject();
 	
 	QVERIFY( jsonObject[ QLatin1String("title")].toString() == book.title);
 	QVERIFY( jsonObject[ QLatin1String("author")].toString() == book.author);
@@ -68,9 +68,9 @@ void QEJsonTest::checkSaveReferences()
 
 	// Update book and save.
 	book.chapters = { ch1, ch2};
-	QEJson::instance().save( &book, &target);
+	QEJson::instance().save( &book, &context);
 
-	jsonObject = target.value().toObject();
+	jsonObject = context.value().toObject();
 	const QJsonArray jsonChapters = jsonObject["chapters"].toArray();
 	QVERIFY( static_cast<uint>(jsonChapters.size()) == book.chapters.size());
 	
@@ -86,7 +86,7 @@ void QEJsonTest::checkSaveReferences()
 	}
 	
 	Book loadedBook;
-	QEJson::instance().load( &target, &loadedBook);
+	QEJson::instance().load( &loadedBook, &context);
 
 	QVERIFY( book == loadedBook);
 }
@@ -103,10 +103,10 @@ void QEJsonTest::checkLoadHelperBoolType()
 { 
 	QFETCH( bool, input);
 	bool output;
-	SerializedItem si;
+	S11nContext context;
 	
-	si.setValue( QJsonValue::fromVariant( input));
-	QEJson::instance().load(  &si, output);
+	context.setValue( QJsonValue::fromVariant( input));
+	QEJson::instance().load( output, &context);
 	QVERIFY( input == output);
 }
 
@@ -127,10 +127,10 @@ void QEJsonTest::checkLoadHelperIntType()
 { 
 	QFETCH( int, input);
 	int output;
-	SerializedItem si;
+	S11nContext context;
 	
-	si.setValue( QJsonValue::fromVariant( input));
-	QEJson::instance().load(  &si, output);
+	context.setValue( QJsonValue::fromVariant( input));
+	QEJson::instance().load( output, &context);
 	QVERIFY( input == output);
 }
 
@@ -150,10 +150,10 @@ void QEJsonTest::checkLoadHelperDoubleType()
 { 
 	QFETCH( double, input);
 	double output;
-	SerializedItem si;
+	S11nContext context;
 	
-	si.setValue( QJsonValue::fromVariant( input));
-	QEJson::instance().load(  &si, output);
+	context.setValue( QJsonValue::fromVariant( input));
+	QEJson::instance().load( output, &context);
 	QVERIFY( input == output);
 }
 
@@ -173,10 +173,10 @@ void QEJsonTest::checkLoadHelperStringType()
 { 
 	QFETCH( QString, input);
 	QString output;
-	SerializedItem si;
+	S11nContext context;
 	
-	si.setValue( QJsonValue::fromVariant( input));
-	QEJson::instance().load(  &si, output);
+	context.setValue( QJsonValue::fromVariant( input));
+	QEJson::instance().load( output, &context);
 	QVERIFY( input == output);
 }
 
@@ -193,10 +193,10 @@ void QEJsonTest::checkLoadHelperQByteArrayType()
 { 
 	QFETCH( QByteArray, input);
 	QByteArray output;
-	SerializedItem si;
+	S11nContext context;
 	
-	si.setValue( QJsonValue::fromVariant( input.toHex()));
-	QEJson::instance().load(  &si, output);
+	context.setValue( QJsonValue::fromVariant( input.toHex()));
+	QEJson::instance().load( output, &context);
 	QVERIFY( input == output);
 }
 
@@ -219,10 +219,10 @@ void QEJsonTest::checkLoadHelperQVariantType()
 { 
 	QFETCH( QVariant, input);
 	QVariant output;
-	SerializedItem si;
+	S11nContext context;
 	
-	si.setValue( QJsonValue::fromVariant( input));
-	QEJson::instance().load(  &si, output);
+	context.setValue( QJsonValue::fromVariant( input));
+	QEJson::instance().load(  output, &context);
 	QVERIFY( input == output);
 }
 
@@ -318,24 +318,24 @@ void QEJsonTest::checkLoadHelperNativeTypes()
 
 void QEJsonTest::checkSaveHelper()
 {
-	SerializedItem si;
+	S11nContext context;
 
 	const QString str( "Text"); 
-	QEJson::instance().save( str, &si);
-	QVERIFY( si.value().toString() == str);
+	QEJson::instance().save( str, &context);
+	QVERIFY( context.value().toString() == str);
 
 	const QByteArray ba( "AB1010");
-	QEJson::instance().save( ba, &si);
-	const QString siValue = si.value().toString();
+	QEJson::instance().save( ba, &context);
+	const QString siValue = context.value().toString();
 	QVERIFY( siValue == ba.toHex());
 	
 	const int integer = 13;
-	QEJson::instance().save( integer , &si);
-	QVERIFY( si.value().toInt() == integer);
+	QEJson::instance().save( integer , &context);
+	QVERIFY( context.value().toInt() == integer);
 	
 	const double real = 3.14;
-	QEJson::instance().save( real, &si);
-	QVERIFY( si.value().toDouble() == real);
+	QEJson::instance().save( real, &context);
+	QVERIFY( context.value().toDouble() == real);
 }
 
 

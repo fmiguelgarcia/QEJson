@@ -25,7 +25,7 @@
  * $QE_END_LICENSE$
  */
 #include "QEJson.hpp"
-#include "SerializedItem.hpp"
+#include "S11nContext.hpp"
 #include "SaveHelper.hpp"
 #include "LoadHelper.hpp"
 #include <qe/common/Exception.hpp>
@@ -37,21 +37,27 @@ using namespace qe::entity;
 using namespace qe::json;
 using namespace std;
 
-namespace {
-	SerializedItem * checkedCast(AbstractSerializedItem *item)
+/**
+ * \class SecuredS11Context
+ * \brief 
+ *
+ */
+
+SecuredS11Context::SecuredS11Context( const AbstractS11nContext* context)
+	: m_context( dynamic_cast<const S11nContext*>( context))
+{
+	if( !m_context)
 	{
-		SerializedItem *const jsonTarget = dynamic_cast<SerializedItem*>( item);
-
-		if (!jsonTarget)
-			Exception::makeAndThrow(
-					QStringLiteral("Json serializer only supports %1 as serialization item")
-					.arg(typeid(SerializedItem).name()));
-
-		return jsonTarget;
+		m_contextScopeGuard.reset( new S11nContext);
+		m_context = m_contextScopeGuard.get();
 	}
-
-
 }
+
+/**
+ * \class QEJson
+ * \brief
+ *
+ */
 
 QEJson &QEJson::instance()
 {
@@ -66,62 +72,29 @@ QEJson::QEJson()
 	: AbstractSerializer()
 {} 
 
-QJsonObject QEJson::parseOrThrow( const QByteArray& data) const
-{
-	QJsonParseError parseError;
-	QJsonDocument doc = QJsonDocument::fromJson( data, &parseError);
-	if( parseError.error != QJsonParseError::NoError)
-	{
-		Exception::makeAndThrow(
-			QString( "QE Json has found a parse error at offset %1: %2")
-			.arg( parseError.error)
-			.arg( parseError.errorString()));
-	}
-	return doc.object();
-}
-
 // Save
 // ======================================================================
 
-void QEJson::save( QObject* const source, 
-	AbstractSerializedItem* const target) const
-{ AbstractSerializer::save( source, target); }
-
-void QEJson::save(ObjectContext &context, const ModelShd &model,
-						QObject *const source,
-						AbstractSerializedItem *const target) const
+void QEJson::save(
+	const ModelShd &model,
+	QObject *const source,
+	AbstractS11nContext *const context) const
 {
-	SerializedItem *const jsonTarget = checkedCast(target);
-
+	SecuredS11Context sc( context);
 	SaveHelper saver;
-	saver.save(context, model, source, jsonTarget);
+
+	saver.save( model, source, sc.get());
 }
-
-void QEJson::save( QObject* const source) const
-{
-	// By default, write to standar output
-	QFile dev;
-	dev.open( stdout, QIODevice::WriteOnly);
-
-	SerializedItem si( &dev);
-	save( source, &si); 
-} 
-
 
 // Load 
 // ===========================================================================
 
-void QEJson::load( const AbstractSerializedItem* const source, 
-	QObject *const target) const
-{ AbstractSerializer::load( source, target);}
-
-void QEJson::load(ObjectContext &context, const ModelShd &model,
-						const AbstractSerializedItem *const source,
-						QObject *const target) const
+void QEJson::load(
+	const ModelShd &model,
+	QObject *const target,
+	const AbstractS11nContext *const context) const
 {
-	SerializedItem *const jsonSource =
-		 checkedCast(const_cast<AbstractSerializedItem *>(source));
-
+	const SecuredS11Context sc( context);
 	LoadHelper loader;
-	loader.load(context, model, jsonSource, target);
+	loader.load( model, target, sc.get());
 }

@@ -25,7 +25,7 @@
  */
 #pragma once
 #include <qe/json/Global.hpp>
-#include <qe/json/SerializedItem.hpp>
+#include <qe/json/S11nContext.hpp>
 #include <qe/json/TypeTraits.hpp>
 #include <qe/entity/Types.hpp>
 #include <QByteArray>
@@ -34,16 +34,17 @@
 
 namespace qe { namespace json { 
 	class SaveHelperPrivate;
-	class SerializedItem;
+	class S11nContext;
 
 	class QEJSON_EXPORT SaveHelper
 	{
 		public:
 			virtual ~SaveHelper();
 
-			void save( entity::ObjectContext& context, 
-				const entity::ModelShd& model, QObject *const source, 
-				SerializedItem* const target) const;
+			void save( 
+				const entity::ModelShd& model, 
+				QObject *const source, 
+				S11nContext* const context) const;
 				
 			template<
 				class T,
@@ -54,9 +55,11 @@ namespace qe { namespace json {
 						typename std::decay<T>::type >::value ,
 					int>::type
 			>
-			inline void save( T&& source, SerializedItem* const target) const
+			inline void save( 
+				T&& source, 
+				S11nContext* const context) const
 			{
-				saveFundamental( std::forward<T>(source), target);
+				saveFundamental( std::forward<T>(source), context);
 			}
 
 			template<
@@ -68,9 +71,11 @@ namespace qe { namespace json {
 						typename std::decay<T>::type >::value,
 					int>::type
 			>
-			inline void save( const T& source, SerializedItem* const target) const
+			inline void save( 
+				const T& source, 
+				S11nContext* const context) const
 			{
-				saveFundamental( source, target);
+				saveFundamental( source, context);
 			}
 
 			template<
@@ -79,10 +84,11 @@ namespace qe { namespace json {
 					std::is_base_of< QObject, T>::value,
 					int>::type
 			>
-			inline void save( T* const source,
-				SerializedItem* const target) const
+			inline void save( 
+				T* const source,
+				S11nContext* const context) const
 			{
-				saveObjectPointer( source, target);
+				saveObjectPointer( source, context);
 			}
 
 		protected:
@@ -90,11 +96,10 @@ namespace qe { namespace json {
 
 		private:
 			template< class T>
-			void saveFundamental( T&& source, SerializedItem* const target) const
-			{ target->setValue( fromVariant( std::forward<T>(source)));}
-
-			void saveObjectPointer( QObject* const source,
-				SerializedItem* const target) const;
+			inline void saveFundamental( 
+				T&& source, 
+				S11nContext* const context) const
+			{ context->setValue( fromVariant( std::forward<T>(source)));}
 
 			template< class T>
 			inline QJsonValue fromVariant( T&& source) const
@@ -105,10 +110,15 @@ namespace qe { namespace json {
 
 			inline QJsonValue fromVariant( QByteArray&& source) const
 			{ return QJsonValue( QString::fromUtf8( source.toHex()));}
-			
-			void saveOneToMany( entity::ObjectContext& context, 
-				const entity::Model &model, QObject *source, 
-				SerializedItem* const target) const;
+	
+			void saveObjectPointer( 
+				QObject* const source,
+				S11nContext* const target) const;
+		
+			void saveOneToMany( 
+				const entity::Model &model, 
+				QObject *source, 
+				S11nContext* const context) const;
 
 			Q_DECLARE_PRIVATE( SaveHelper);
 	};

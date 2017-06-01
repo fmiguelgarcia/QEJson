@@ -26,7 +26,7 @@
  */
 #pragma once
 #include <qe/json/Global.hpp>
-#include <qe/json/SerializedItem.hpp>
+#include <qe/json/S11nContext.hpp>
 #include <qe/json/LoadHelper.hpp>
 #include <qe/json/SaveHelper.hpp>
 #include <qe/json/TypeTraits.hpp>
@@ -42,6 +42,24 @@
 class QJsonObject;
 namespace qe { namespace json {
 	class QEJsonPrivate;
+	
+	class SecuredS11Context
+	{
+		public:
+			explicit SecuredS11Context( 
+				const qe::entity::AbstractS11nContext* context);
+
+			inline S11nContext* get() noexcept
+			{ return const_cast<S11nContext*>( m_context); }
+			
+			inline const S11nContext* get() const noexcept
+			{ return m_context; }
+
+		private:
+			const S11nContext * m_context;
+			std::unique_ptr<const S11nContext> m_contextScopeGuard;
+	};
+
 
 	class QEJSON_EXPORT QEJson
 		: public qe::entity::AbstractSerializer
@@ -51,87 +69,83 @@ namespace qe { namespace json {
 
 			// Save to Serialized Item 
 			// ===============================================================
-			void save( QObject* const source, 
-				entity::AbstractSerializedItem* const target) const override;
+			inline void save( 
+				QObject* const source, 
+				entity::AbstractS11nContext* const context = nullptr) const override
+			{ qe::entity::AbstractSerializer::save( source, context);}
 	
-			void save( QObject* const source) const;
-			
 			// Save to SI
-            template< class T>
-			void save( T&& source, SerializedItem* const target) const
+         template< class T>
+			void save( T&& source, S11nContext* const context = nullptr) const
 			{
 				SaveHelper saver;
-				saver.save( std::forward<T>(source), target);
+				saver.save( std::forward<T>(source), context);
 			}
 			
-            template< class T>
-			void save( const T& source, SerializedItem* const target) const
+			template< class T>
+			void save( const T& source, S11nContext* const context) const
 			{
+				SecuredS11Context sc( context);
 				SaveHelper saver;
-				saver.save( source, target);
+				saver.save( source, sc.get());
 			}
-
 
 			// Load from Serialized Item
 			// ===============================================================
 	
-			void load( const entity::AbstractSerializedItem* const source, 
-				QObject *const target) const override;
+			inline void load( 
+				QObject *const target,
+				const entity::AbstractS11nContext* const context = nullptr) 
+					const override
+			{ qe::entity::AbstractSerializer::load( target, context);}
 		
 			template< class T>
-			void load( const SerializedItem* const source, 
-				T&& target) const
+			void load( 
+				T&& target,
+				const S11nContext* const context = nullptr) const
 			{
+				const SecuredS11Context sc( context);
 				LoadHelper loader;
-				loader.load( source, std::forward<T>(target));
+				loader.load( std::forward<T>(target), sc.get());
 			}
 				
-			// Load from ByteArray
-			template< class T>
-			void load( const QByteArray& source,
-				T&& target) const
-			{
-				load( parseOrThrow(source), std::forward<T>(target));
-			}
-			
-			template< class T>
-			void load( const QJsonObject& source,
-				T&& target) const
-			{
-				SerializedItem si( source);
-				load( &si, target);
-			}
-
 			// Save N parameters
 			// ===================================================================	
-			void saveN( SerializedItem& target) const 
+			void saveN( S11nContext& context) const 
 			{}
 	
 			template< class T, typename ...Args>
-			void saveN( SerializedItem& target, std::tuple<QString,T>& source, 
-					Args&&... params) const
+			void saveN( 
+				S11nContext& context, 
+				std::tuple<QString,T>& source, 
+				Args&&... params) const
 			{
-				saveN( target, std::get<0>( source), std::get<1>( source),
+				saveN( context, std::get<0>( source), std::get<1>( source),
 					std::forward<Args>( params)...);
 			}
 
 			template< class T, typename ...Args>
-			void saveN( SerializedItem& target, const QString& key, 
-					T&& source, Args&&... params) const
+			void saveN( 
+				S11nContext& context, 
+				const QString& key, 
+				T&& source, 
+				Args&&... params) const
 			{
-				SerializedItem part;
-				save( part, source);
+				S11nContext contextPart;
+				save( source, contextPart);
 				
-				target.insert( key, part.value());
-				QJsonObject jsonObj = target.value().toObject();
+				context.insert( key, contextPart.value());
+				QJsonObject jsonObj = context.value().toObject();
 				saveN( jsonObj, std::forward<Args>( params)...);
 				
-				target.setValue( jsonObj);
+				context.setValue( jsonObj);
 			}
 
 			template<typename ...Args>
-			void saveN( SerializedItem& target, Args&&... params) const
-			{ saveN( target, std::forward<Args>( params)...);}
+			inline void saveN( 
+				S11nContext& context,
+				Args&&... params) const
+			{ saveN( context, std::forward<Args>( params)...);}
 
 
 		protected:
@@ -139,17 +153,16 @@ namespace qe { namespace json {
 			QEJson( const QEJson&);
 			QEJson& operator=( const QEJson& );
 			
-			void save( entity::ObjectContext& context, 
-				const entity::ModelShd& model, QObject *const source, 
-				entity::AbstractSerializedItem* const target) const override;
+			void save( 
+				const entity::ModelShd& model, 
+				QObject *const source, 
+				entity::AbstractS11nContext* const context) const override;
 
-			void load( entity::ObjectContext& context, 
+			void load( 
 				const entity::ModelShd& model,
-			  	const entity::AbstractSerializedItem *const source,
-				QObject *const target) const override;
+				QObject *const target,
+			  	const entity::AbstractS11nContext *const context) const override;
 				
-			QJsonObject parseOrThrow( const QByteArray& data) const;
-
 		private:
 			Q_DECLARE_PRIVATE(QEJson);
 	};

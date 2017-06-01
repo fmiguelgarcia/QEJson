@@ -25,7 +25,7 @@
  * $QE_END_LICENSE$
  */
 #include "LoadHelper.hpp"
-#include "SerializedItem.hpp"
+#include "S11nContext.hpp"
 #include <qe/common/Exception.hpp>
 #include <qe/entity/Model.hpp>
 #include <qe/entity/ModelRepository.hpp>
@@ -60,34 +60,35 @@ namespace {
 LoadHelper::~LoadHelper()
 {}
 
-void LoadHelper::load( ObjectContext& context, 
-	const ModelShd& model, const SerializedItem*const source, 
-	QObject*const target) const
+void LoadHelper::load( 
+	const ModelShd& model, 
+	QObject*const target,
+	const S11nContext* const context) const
 {
-	const QJsonValue value = source->value(); 
+	const QJsonValue value = context->value(); 
 	if( value.isObject())
 	{
 		const QJsonObject jsonObj = value.toObject();
 	
 		loadObjectFromJson( *model, jsonObj, target);
-		loadOneToMany( context, model, source, target);
+		loadOneToMany( model, target, context);
 	}
 }
 
-void LoadHelper::loadObjectPointer( const SerializedItem* const source,
-	QObject* const target) const
+void LoadHelper::loadObjectPointer( 
+	QObject* const target,
+	const S11nContext* const context) const
 {
-	ObjectContext context;
 	const ModelShd model = ModelRepository::instance().model( target->metaObject());
 
-	load( context, model, source, target);
+	load( model, target, context);
 }
 
 void LoadHelper::loadVariant(
-	const SerializedItem* const source,
-	QVariant& target) const
+	QVariant& target,
+	const S11nContext* const context) const
 {
-	QJsonValue jsonValue = source->value();
+	QJsonValue jsonValue = context->value();
 	if( !jsonValue.isNull())
 		target = jsonValue.toVariant();
 	else
@@ -113,17 +114,19 @@ void LoadHelper::loadObjectFromJson( const Model& model, const QJsonObject& json
 	}
 }
 
-void LoadHelper::loadOneToMany( ObjectContext& context, const ModelShd& model,
-	const SerializedItem *const source, QObject* const target) const
+void LoadHelper::loadOneToMany( 
+	const ModelShd& model,
+	QObject* const target,
+	const S11nContext*const context) const
 {
-	ScopedStackedObjectContext _(target, context);
+	ScopedS11Context _(target, context);
 	
 	for( const EntityDefShd& eDef : model->entityDefs())
 	{
 		if( eDef->mappingType() == EntityDef::MappingType::OneToMany)
 		{
 			ModelShd manyModel = ModelRepository::instance().model( eDef->mappingEntity());
-			const QJsonValue value = source->value();
+			const QJsonValue value = context->value();
 			const QJsonObject jsonObj = value.toObject();
 			const QJsonArray jsonArray = jsonObj[ eDef->entityName()]
 				.toArray();
@@ -139,8 +142,8 @@ void LoadHelper::loadOneToMany( ObjectContext& context, const ModelShd& model,
 						QStringLiteral( "QE Json load helper cannot create and instance of class ")
 						% eDef->mappingEntity()->className());
 		
-				SerializedItem si( jsonArray[i]);
-				load( context, manyModel, &si, itemObj); 
+				S11nContext itemCtxt( jsonArray[i]);
+				load( manyModel, itemObj, &itemCtxt); 
 				wrapperList.push_back( QVariant::fromValue(itemObj));
 			}
 			target->setProperty( eDef->propertyName(), wrapperList);

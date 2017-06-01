@@ -24,28 +24,65 @@
  *
  * $QE_END_LICENSE$
  */
-#include <SerializedItem.hpp>
+#include <S11nContext.hpp>
+#include <qe/common/Exception.hpp>
 #include <QIODevice>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
 
 using namespace qe::json;
+using namespace qe::common;
 
-SerializedItem::SerializedItem( QIODevice *dev)
-	: m_dev( dev)
+namespace {
+	
+	QJsonObject parseOrThrow( const QByteArray& data)
+	{
+		QJsonParseError parseError;
+		QJsonDocument doc = QJsonDocument::fromJson( data, &parseError);
+		if( parseError.error != QJsonParseError::NoError)
+		{
+			Exception::makeAndThrow(
+					QString( "QE Json has found a parse error at offset %1: %2")
+					.arg( parseError.error)
+					.arg( parseError.errorString()));
+		}
+		return doc.object();
+	}
+}
+
+
+
+S11nContext::S11nContext( QIODevice *dev)
+	: AbstractS11nContext( QVariantList()),
+	m_dev( dev)
 {}
 
-SerializedItem::SerializedItem( const QJsonValue& value)
-	: m_dev(nullptr)
+S11nContext::S11nContext( const QJsonValue& value)
+	: AbstractS11nContext( QVariantList()),
+	m_dev(nullptr)
 {
 	setValue( value);
 }
 
-SerializedItem::~SerializedItem()
+#if 0
+S11nContext::S11nContext( const QJsonObject& json)
+	: AbstractS11nContext( QVariantList()),
+	m_dev(nullptr)
+{
+	setValue( json);
+}
+#endif
+
+S11nContext::S11nContext( const QByteArray& json)
+	: S11nContext( parseOrThrow( json))
+{}
+			
+
+S11nContext::~S11nContext()
 {}
 
-QByteArray SerializedItem::toJson( const QJsonDocument::JsonFormat format) const
+QByteArray S11nContext::toJson( const QJsonDocument::JsonFormat format) const
 {
 	QJsonObject object;
 	
@@ -58,7 +95,7 @@ QByteArray SerializedItem::toJson( const QJsonDocument::JsonFormat format) const
 	return doc.toJson( format);
 }
 
-void SerializedItem::flush( const QJsonDocument::JsonFormat format) const
+void S11nContext::flush( const QJsonDocument::JsonFormat format) const
 {
 	if( m_dev 
 		&& m_dev->isOpen() 
@@ -68,13 +105,13 @@ void SerializedItem::flush( const QJsonDocument::JsonFormat format) const
 	}
 }
 
-void SerializedItem::setValue(const QJsonValue& other)
+void S11nContext::setValue(const QJsonValue& other)
 { m_value = other; }
 
-QJsonValue SerializedItem::value() const
+QJsonValue S11nContext::value() const
 { return m_value; }
 
-void SerializedItem::insert(const QString& key, const QJsonValue& value)
+void S11nContext::insert(const QString& key, const QJsonValue& value)
 {
 	QJsonObject object = m_value.toObject();
 	object.insert( key, value);

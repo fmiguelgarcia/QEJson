@@ -7,9 +7,11 @@ set( QEJson_MINOR_VERSION 0)
 set( QEJson_BUILD_VERSION 0)
 
 set( QEJson_SRCS
-	Global.hpp TypeTraits.hpp
-	SerializedItem.cpp 
-	SaveHelper.cpp LoadHelper.cpp
+	Global.hpp 
+	TypeTraits.hpp
+	S11nContext.cpp 
+	SaveHelper.cpp 
+	LoadHelper.cpp
 	QEJson.cpp)
 add_definitions( -DQEJSON_LIBRARY)
 

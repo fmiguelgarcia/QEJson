@@ -24,7 +24,7 @@
  * $QE_END_LICENSE$
  */
 #include "SaveHelper.hpp"
-#include "SerializedItem.hpp"
+#include "S11nContext.hpp"
 #include <qe/common/Exception.hpp>
 #include <qe/entity/Model.hpp>
 #include <qe/entity/ModelRepository.hpp>
@@ -54,8 +54,10 @@ namespace {
 		return jsonValue;
 	}
 
-	void insert( ObjectContext& context, const Model &model, const QObject *source,
-					 SerializedItem* const target)
+	void insert( 
+		const Model &model, 
+		const QObject *source,
+		S11nContext* const target)
 	{
 		for( const auto& eDef: model.entityDefs())
 		{
@@ -76,30 +78,33 @@ namespace {
 SaveHelper::~SaveHelper()
 {}
 
-void SaveHelper::save( ObjectContext& context, const ModelShd& model, 
-	QObject *const source, SerializedItem* const target) const
+void SaveHelper::save( 
+	const ModelShd& model, 
+	QObject *const source, 
+	S11nContext* const context ) const
 {
-	if( find( begin(context), end(context), source) != end(context))
+	if( context->isObjectInContext( source))
 		Exception::makeAndThrow(
 			QStringLiteral( "Json Save helper does NOT support recursive relations"));	
 
-	insert( context, *model, source, target);
-	saveOneToMany( context, *model, source, target);
+	insert( *model, source, context);
+	saveOneToMany( *model, source, context);
 }
 
-void SaveHelper::saveObjectPointer( QObject*const source,
-	SerializedItem*const target) const
+void SaveHelper::saveObjectPointer( 
+	QObject*const source,
+	S11nContext*const target) const
 {
-	ObjectContext context;
 	const ModelShd model = ModelRepository::instance().model( source->metaObject());
-	save( context, model, source, target);
+	save( model, source, target);
 }
 
-/// @todo Move this to common class? 
-void SaveHelper::saveOneToMany( ObjectContext& context, const Model &model, 
-		QObject *source, SerializedItem* const target) const
+void SaveHelper::saveOneToMany( 
+	const Model &model, 
+	QObject *source, 
+	S11nContext* const context) const
 {
-	ScopedStackedObjectContext _( source, context);
+	ScopedS11Context _( source, context);
 	
 	for( const auto& eDef : model.entityDefs())
 	{
@@ -116,17 +121,17 @@ void SaveHelper::saveOneToMany( ObjectContext& context, const Model &model,
 			QVariantList values = propertyValue.toList();
 			for( QVariant& value : values)
 			{
-				SerializedItem itemTarget;
+				S11nContext itemTarget;
 				QObject *refItem = value.value<QObject*>();
 				if( refItem )
 				{
 					ModelShd refModel = ModelRepository::instance().model( 
 							refItem->metaObject());
-					save( context, refModel, refItem, &itemTarget);
+					save( refModel, refItem, &itemTarget);
 				}
 				jsonArray.append( itemTarget.value());
 			}
-			target->insert( eDef->entityName(), jsonArray);
+			context->insert( eDef->entityName(), jsonArray);
 		}
 	}
 }
