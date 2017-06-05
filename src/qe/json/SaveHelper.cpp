@@ -61,12 +61,12 @@ namespace {
 	{
 		for( const auto& eDef: model.entityDefs())
 		{
-			if( eDef->mappingType() == EntityDef::MappingType::NoMappingType)
+			if( eDef.mappedType() == EntityDef::MappedType::NoMappedType)
 			{
-				const QByteArray& propName = eDef->propertyName();
+				const QByteArray& propName = eDef.propertyName();
 				const QVariant propertyValue = source->property( propName);
 				const QJsonValue jsonValue = toJsonValue( propertyValue);
-				target->insert( eDef->entityName(), jsonValue);
+				target->insert( eDef.entityName(), jsonValue);
 			}
 		}
 	}
@@ -108,9 +108,9 @@ void SaveHelper::saveOneToMany(
 	
 	for( const auto& eDef : model.entityDefs())
 	{
-		if( eDef->mappingType() == EntityDef::MappingType::OneToMany)
+		if( eDef.mappedType() == EntityDef::MappedType::OneToMany)
 		{
-			const QByteArray& propertyName = eDef->propertyName();
+			const QByteArray& propertyName = eDef.propertyName();
 			const QVariant propertyValue = source->property( propertyName);
 			if( ! propertyValue.canConvert<QVariantList>())
 				Exception::makeAndThrow(
@@ -131,7 +131,7 @@ void SaveHelper::saveOneToMany(
 				}
 				jsonArray.append( itemTarget.value());
 			}
-			context->insert( eDef->entityName(), jsonArray);
+			context->insert( eDef.entityName(), jsonArray);
 		}
 	}
 }
