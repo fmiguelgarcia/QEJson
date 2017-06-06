@@ -32,3 +32,7 @@ build
 *.exe
 *.out
 *.app
+
+# Customs
+CMakeLists.txt.user
+compile_commands.json
