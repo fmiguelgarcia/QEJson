@@ -154,12 +154,12 @@ namespace qe { namespace json {
 			QEJson& operator=( const QEJson& );
 			
 			void save( 
-				const entity::ModelShd& model, 
+				const entity::Model& model,
 				QObject *const source, 
 				entity::AbstractS11nContext* const context) const override;
 
 			void load( 
-				const entity::ModelShd& model,
+				const entity::Model& model,
 				QObject *const target,
 			  	const entity::AbstractS11nContext *const context) const override;
 				

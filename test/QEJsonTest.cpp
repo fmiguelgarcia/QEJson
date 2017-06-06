@@ -56,6 +56,7 @@ void QEJsonTest::checkSaveReferences()
 		"arguments get special treatment.";
 	ch1.id = 1 + book.id * 1000;
 	ch1.setObjectName( "Chapter 1");
+	ch1.footNotes << "Footnote #1" << "Footnote #2";
 	
 	Chapter ch2( nullptr, "Understand auto type deduction");
 	ch2.text = " - auto type deduction is usually the same as template type "
@@ -65,6 +66,7 @@ void QEJsonTest::checkSaveReferences()
 		"lambda  parameter  implies  template  type deduction, not auto type "
 		"deduction.";
 	ch2.id = 2 + book.id * 1000;
+	ch2.footNotes << "Footnote #3" << "Footnote #4";
 
 	// Update book and save.
 	book.chapters = { ch1, ch2};
@@ -83,6 +85,13 @@ void QEJsonTest::checkSaveReferences()
 		QVERIFY( ch.objectName() == jsonCh[ "objectName"].toString());
 		QVERIFY( ch.text == jsonCh[ "text"].toString());
 		QVERIFY( ch.title == jsonCh[ "title"].toString());
+
+		// Check footNotes
+		QJsonArray jsonFootNotes = jsonCh[ "footNotes"].toArray();
+		QVERIFY( jsonFootNotes.size() == ch.footNotes.size());
+
+		for( int i = 0; i < jsonFootNotes.size(); ++i)
+			QVERIFY( ch.footNotes[i] == jsonFootNotes[i].toString());
 	}
 	
 	Book loadedBook;
@@ -337,6 +346,5 @@ void QEJsonTest::checkSaveHelper()
 	QEJson::instance().save( real, &context);
 	QVERIFY( context.value().toDouble() == real);
 }
-
 
 QTEST_MAIN(QEJsonTest)

@@ -4,13 +4,14 @@
 class Chapter
 	: public QObject
 {
-	Q_OBJECT 
-	Q_CLASSINFO( "class", "@qe.entity.isParentExported=true @qe.entity.primaryKey=id") 
-
+	Q_OBJECT
 	Q_PROPERTY( int id MEMBER id)
 	Q_PROPERTY( QString title MEMBER title)
-	Q_CLASSINFO( "title", "@qe.entity.maxLength=256")
 	Q_PROPERTY( QString text MEMBER text)
+	Q_PROPERTY( QStringList footNotes MEMBER footNotes)
+
+	Q_CLASSINFO( "class", "@qe.entity.isParentExported=true @qe.entity.primaryKey=id") 
+	Q_CLASSINFO( "title", "@qe.entity.maxLength=256")
 	Q_CLASSINFO( "text", "@qe.entity.isNullable=true")
 
 	public:
@@ -22,9 +23,13 @@ class Chapter
 		Chapter& operator=( const Chapter& other);
 		bool operator==( const Chapter& other) const;
 
+		void swap( Chapter& other) noexcept;
+
 	public:
 		int id;
 		QString title;
 		QString text;
+
+		QStringList footNotes;
 };
 Q_DECLARE_METATYPE( Chapter*)

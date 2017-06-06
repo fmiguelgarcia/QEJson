@@ -61,7 +61,7 @@ LoadHelper::~LoadHelper()
 {}
 
 void LoadHelper::load( 
-	const ModelShd& model, 
+	const Model& model,
 	QObject*const target,
 	const S11nContext* const context) const
 {
@@ -70,7 +70,7 @@ void LoadHelper::load(
 	{
 		const QJsonObject jsonObj = value.toObject();
 	
-		loadObjectFromJson( *model, jsonObj, target);
+		loadObjectFromJson( model, jsonObj, target);
 		loadOneToMany( model, target, context);
 	}
 }
@@ -79,7 +79,7 @@ void LoadHelper::loadObjectPointer(
 	QObject* const target,
 	const S11nContext* const context) const
 {
-	const ModelShd model = ModelRepository::instance().model( target->metaObject());
+	const Model model = ModelRepository::instance().model( target->metaObject());
 
 	load( model, target, context);
 }
@@ -115,45 +115,51 @@ void LoadHelper::loadObjectFromJson( const Model& model, const QJsonObject& json
 }
 
 void LoadHelper::loadOneToMany( 
-	const ModelShd& model,
+	const Model& model,
 	QObject* const target,
 	const S11nContext*const context) const
 {
 	ScopedS11Context _(target, context);
 	
-	for( const EntityDef& eDef : model->entityDefs())
+	for( const EntityDef& eDef : model.entityDefs())
 	{
 		if( eDef.mappedType() == EntityDef::MappedType::OneToMany)
 		{
-			ModelShd manyModel = eDef.mappedModel();
-			const QJsonValue value = context->value();
-			const QJsonObject jsonObj = value.toObject();
-			const QJsonArray jsonArray = jsonObj[ eDef.entityName()]
-				.toArray();
-		
-			QVariantList wrapperList;
-			for( int i = 0; i < jsonArray.size(); ++i)
+			const optional<Model> manyModel = eDef.mappedModel();
+			if( manyModel)
 			{
-				// 1. Create a new object
-				const QMetaObject *mo = manyModel->metaObject();
-				if( mo )
-				{
-					QObject * itemObj = mo->newInstance( Q_ARG(QObject*, target));
-					if( !itemObj)
-						Exception::makeAndThrow(
-							QStringLiteral( "QE Json load helper cannot create and instance of class ")
-							% mo->className());
+				const QJsonValue value = context->value();
+				const QJsonObject jsonObj = value.toObject();
+				const QJsonArray jsonArray = jsonObj[ eDef.entityName()]
+					.toArray();
 		
-					S11nContext itemCtxt( jsonArray[i]);
-					load( manyModel, itemObj, &itemCtxt);
-					wrapperList.push_back( QVariant::fromValue(itemObj));
-				}
-				else
+				QVariantList wrapperList;
+				for( int i = 0; i < jsonArray.size(); ++i)
 				{
-					/// @todo for models represent OneToMany on simple type : i.e. QStringList
+					QVariant value;
+					S11nContext itemCtxt( jsonArray[i]);
+
+					const QMetaObject *mo = manyModel->metaObject();
+					if( mo )
+					{
+						QObject * itemObj = mo->newInstance( Q_ARG(QObject*, target));
+						if( !itemObj)
+							Exception::makeAndThrow(
+								QStringLiteral( "QE Json load helper cannot create and instance of class ")
+								% mo->className());
+		
+						load( *manyModel, itemObj, &itemCtxt);
+						value = QVariant::fromValue(itemObj);
+					}
+					else
+					{
+						load( value, &itemCtxt);
+					}
+
+					wrapperList.push_back( value);
 				}
+				target->setProperty( eDef.propertyName(), wrapperList);
 			}
-			target->setProperty( eDef.propertyName(), wrapperList);
 		}
 	}
 }

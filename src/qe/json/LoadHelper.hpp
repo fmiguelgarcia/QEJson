@@ -43,7 +43,7 @@ namespace qe { namespace json {
 			virtual ~LoadHelper();
 
 			void load( 
-				const entity::ModelShd& model, 
+				const entity::Model& model,
 				QObject *const target,
 				const S11nContext *const source) const;
 
@@ -128,7 +128,7 @@ namespace qe { namespace json {
 				QObject* target) const; 
 			
 			void loadOneToMany( 
-				const entity::ModelShd& model, 
+				const entity::Model& model,
 				QObject* const target,
 				const S11nContext *const context) const;
 

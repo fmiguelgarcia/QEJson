@@ -76,7 +76,7 @@ QEJson::QEJson()
 // ======================================================================
 
 void QEJson::save(
-	const ModelShd &model,
+	const Model &model,
 	QObject *const source,
 	AbstractS11nContext *const context) const
 {
@@ -90,7 +90,7 @@ void QEJson::save(
 // ===========================================================================
 
 void QEJson::load(
-	const ModelShd &model,
+	const Model &model,
 	QObject *const target,
 	const AbstractS11nContext *const context) const
 {

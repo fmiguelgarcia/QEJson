@@ -79,7 +79,7 @@ SaveHelper::~SaveHelper()
 {}
 
 void SaveHelper::save( 
-	const ModelShd& model, 
+	const Model& model,
 	QObject *const source, 
 	S11nContext* const context ) const
 {
@@ -87,15 +87,15 @@ void SaveHelper::save(
 		Exception::makeAndThrow(
 			QStringLiteral( "Json Save helper does NOT support recursive relations"));	
 
-	insert( *model, source, context);
-	saveOneToMany( *model, source, context);
+	insert( model, source, context);
+	saveOneToMany( model, source, context);
 }
 
 void SaveHelper::saveObjectPointer( 
 	QObject*const source,
 	S11nContext*const target) const
 {
-	const ModelShd model = ModelRepository::instance().model( source->metaObject());
+	const Model model = ModelRepository::instance().model( source->metaObject());
 	save( model, source, target);
 }
 
@@ -125,9 +125,13 @@ void SaveHelper::saveOneToMany(
 				QObject *refItem = value.value<QObject*>();
 				if( refItem )
 				{
-					ModelShd refModel = ModelRepository::instance().model( 
+					Model refModel = ModelRepository::instance().model(
 							refItem->metaObject());
 					save( refModel, refItem, &itemTarget);
+				}
+				else
+				{
+					save( value, &itemTarget);
 				}
 				jsonArray.append( itemTarget.value());
 			}
