@@ -43,7 +43,7 @@ class QJsonObject;
 namespace qe { namespace json {
 	class QEJsonPrivate;
 	
-	class SecuredS11Context
+	class QEJSON_EXPORT SecuredS11Context
 	{
 		public:
 			explicit SecuredS11Context( 

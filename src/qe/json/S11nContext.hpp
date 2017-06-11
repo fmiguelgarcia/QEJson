@@ -35,7 +35,7 @@ class QIODevice;
 namespace qe { namespace json { 
 	class S11nContextPrivate;
 
-   class QEJSON_EXPORT S11nContext
+	class QEJSON_EXPORT S11nContext
 		: public qe::entity::AbstractS11nContext
 	{
 		public:
